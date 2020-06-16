@@ -253,7 +253,7 @@ From a Hyperledger Perspective, FPC is closely related to Private Data Objects (
 FPC is for Fabric what is PDO for Sawtooth: TEE-based smart contracts which extend the respective ledger technology with strong confidentiality in addition to the pre-existing strong integrity. Note that the PDO team is also involved in the design and development of FPC.
 Avalon on the other hand focuses on efficient off-chain confidential and (initially) state-less computation, e.g., it does not give any guarantee of rollback-resilient encrypted state or alike. 
 
-Moreover, Corda (https://docs.corda.net/design/sgx-integration/design.html) proposes the use of Intel SGX to protect privacy and intgrity of smart-contracts. There 
+Moreover, Corda (https://docs.corda.net/design/sgx-integration/design.html) proposes the use of Intel SGX to protect privacy and integrity of smart-contracts. In contrast to FPC, Corda uses Intel SGX to secure transaction validation only whereas our approach executes each FPC chaincode in an enclave.
  
 # Testing
 [testing]: #testing
@@ -281,4 +281,3 @@ The primary unresolved questions in FPC relate to the “Fabric Touchpoints” a
 - With removing go-plugin support, FPC integration requires to be compiled with a peer. Is there a better alternative?  
  
  
-
