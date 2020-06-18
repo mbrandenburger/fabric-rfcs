@@ -60,7 +60,7 @@ Note on Terminology: The current feature naming scheme includes several elements
  
 ## Principal Components of FPC:
 
-![Arcitecture](FPC-Architecture.png) 
+![Arcitecture](../images/FPC-Architecture.png) 
 
 FPC Chaincode: A chaincode created by a developer to run in a Chaincode Enclave. Unlike regular Fabric chaincode, an FPC Chaincode must currently be written in C++ using our FPC SDK. A future goal for the project is to support additional languages, e.g., by the use of WebAssembly.
 
@@ -95,13 +95,13 @@ To illustrate how the FPC architecture works and how it ensures robust end-to-en
  
 * Step 1: Client Invocation of the FPC Chaincode
  
- ![Invoke](FPC-Invoke.png)
+ ![Invoke](../images/FPC-Invoke.png)
  
     The Client prepares the Invocation of an FPC Chaincode by first encrypting the arguments of the Chaincode Invocation using the public key specific to a particular Chaincode. This encryption happens completely transparently using our FPC Client SDK extension. This Transaction Proposal is then sent to the Endorsing Peer where a corresponding Chaincode Enclave resides. Depending on the Endorsement Policy the client may perform this step with one or more Endorsing Peers and their respective Chaincode Enclaves. (For simplicity we will continue describing the process for a single Endorsing Peer.) The Peer forwards the Transaction Proposal to its FPC Chaincode running inside the Chaincode Enclave. Inside the Enclave, the FPC shim decrypts the Proposal and invokes the FPC Chaincode.
  
 * Step 2: Chaincode Execution
 
- ![Execute](FPC-Execute.png)
+ ![Execute](../images/FPC-Execute.png)
  
     Having received and decrypted the Transaction Proposal, the FPC Chaincode processes the invocation according to the implemented chaincode logic. While executing, the chaincode can access the World State through getState and putState operations provided by the Chaincode Library shim. The Chaincode Library Shim fetches the state data from the peer and loads it into the Chaincode Enclave; then the chaincode library verifies that the received data is correct (e.g. is actual committed data) with the help of the Ledger Enclave. This protects the Chaincode from various attacks that might be possible in the case of a compromised Peer. (An example and explanation is included below.) We refer to our paper (see prior art section) for more details on this type of attack.
  
@@ -109,32 +109,32 @@ To illustrate how the FPC architecture works and how it ensures robust end-to-en
  
 * Step 3: Endorsement
 
- ![Endorsement](FPC-Endorsement.png)
+ ![Endorsement](../images/FPC-Endorsement.png)
 
 	The Client receives the Proposal Response (and collects enough Proposal Responses from other endorsing peers to satisfy the chaincode’s Endorsement Policy). Moreover, the FPC Client SDK extension verifies that the proposal response signature has been produced by a "valid" Chaincode Enclave. If this verification step fails, there is no need for the client to proceed and the transaction invocation is aborted.
     Otherwise, the client continues and builds a transaction and submits it for ordering.
  
 * Step 4: Ordering
  
- ![Ordering](FPC-Ordering.png)
+ ![Ordering](../images/FPC-Ordering.png)
  
     With FPC we follow the normal Ordering service. While the Orderer is unmodified in FPC, the ordered transactions broadcast to the Peers in the Channel for validation now include attested endorsements. Note that we encourage the use of a BFT-based ordering service as FPC requires the Ordering service to be trusted. 
  
 * Step 5: Validation
 
- ![Validate](FPC-Validate.png)
+ ![Validate](../images/FPC-Validate.png)
 
     As the Peers in the Channel receive the block, they perform the standard Fabric validation process. In addition, a custom validation plugin in the Peer is responsible to verify FPC transactions. In particular, the FPC Validator queries its local FPC Registry to retrieve the enclave signature verification key and check that the signature was produced in an actual and correct Chaincode Enclave. This query retrieves the stored Attestation report associated with the Public Key of the Chaincode Enclave that produced and signed the transaction. The Attestation report is checked to verify the details of the Chaincode Enclave, affirming the validity of the Enclave. 
     
 * Step 6: Trusted Ledger Revalidation
 
-  ![Revalidate](FPC-Revalidate.png)
+  ![Revalidate](../images/FPC-Revalidate.png)
     
     In addition to the standard commitment process, the Peer also forwards all validated blocks to the Ledger Enclave in order to establish a full and current trusted view of the ledger. The same validation steps described above are repeated inside the Enclave, and then the transaction is committed to the trusted version of the Ledger inside this Enclave. This constitutes an update to the World State Integrity Metadata: for each Key Value Pair of World State, a second Key Value Pair is stored in the Trusted Ledger containing Integrity Metadata (a cryptographic hash value) along with channel-specific details needed to verify that the transaction was produced by a valid authorized participant in the channel.
 
 * Step 7: Commitment
 
-  ![Commit](FPC-Commit.png)
+  ![Commit](../images/FPC-Commit.png)
     
     If these validation processes succeed,the transaction is marked valid and is committed to the local ledger of the Peer. The Write Set is committed to the World State. This completes the transaction.
  
