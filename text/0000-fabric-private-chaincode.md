@@ -150,10 +150,10 @@ Subsequent to the transaction described above: When any FPC Chaincode accesses t
 ![Encryption](../images/FPC-Encryption.png)
 
 Encrypted elements of the FPC architecture (over and above those in Fabric, such as TLS tunnels from Client to Peer) include:
-- The Arguments in the Invocation message
-- The results of execution in the endorsement messages returned to the Client
+- The Arguments in a proposal message
+- The results of execution in a proposal response message returned to the Client
 - All contents of memory in both the Chaincode Enclave(s) and the Ledger Enclave
-- All FPC transactions written to the Ledger (by default).
+- All FPC transaction read/writesets are written to the Ledger (by default).
 
 
 ## Requirements
@@ -165,11 +165,16 @@ Encrypted elements of the FPC architecture (over and above those in Fabric, such
 - FPC’s runtime relies on a external chaincode launcher, and its attestation infrastructure requires the installation of an FPC Registry chaincode in the channel
 - FPC components running inside the enclave are implemented in C++; whereas components running outside are implemented in Go following Fabric programming standards/guidelines
 
-## Fabric Features Not Supported
+## Fabric Features Not Yet Supported
+
+In order to focus the development resources on the core components of FPC, the MVP excludes certain Fabric features, which will be added in the future.
 
 - Multiple Implementations for a Single Chaincode - this feature added in Fabric 2.0 is fundamentally incompatible with FPC's architecture: for chaincodes to be considered equivalent they must be bit-for-bit identical in order to generate matching identities (i.e. MRENCLAVE)
-- cc2cc
-- etc.
+- Arbitrary endorsement policies
+- Chaincode-to-chaincode invocations (cc2cc)
+- State-based endorsement
+- Custom endorsement / validation plugins for FPC
+- Private Collections
 
 
 ## Example FPC Chaincode
@@ -271,18 +276,25 @@ The Ordering Service is treated as a trusted element in FPC networks, but securi
 
 - Attestation-Based Endorsements: In order to integrate cryptographic Attestation of the TEE with Fabric endorsements, we created custom endorsement and validation plugins and include the enclave signature as part of the response payload. This added payload and the need for every Peer to run a custom validation plugin seem undesirable in the long term. Our current plan is to create a custom Membership Service Provider to replace the original mechanism. The new TEE MSP type would treat TEEs as members of an Org, replacing the Peer’s endorsing signature with a TEE Signature. We believe this approach would be more elegant and flexible, and would lay the ground for easier enablement of new TEE types.
 
-- Go Plugins for Trusted Ledger and Validation: In order to build FPC without recompiling the Peer, the current implementation makes use of Go Plugins to enable our Trusted Ledger and Validation functions in the Peer. We understand that Go plugins may not be viable long-term; if they were no longer to be supported, we would have to recompile the Peer.
+- Go plugins for Trusted Ledger and Validation: In order to build FPC without recompiling the Peer, the current implementation makes use of Go plugins to enable our Trusted Ledger and Validation functions in the Peer. We understand that Go plugins may not be viable long-term; if they were no longer to be supported, we would have to recompile the Peer.
 
 The FPC team welcomes the community’s advice on how each of these touch-points to Fabric should be handled going forward, and hope to solidify our plans for each element through the RFC process.
 
 ## Roadmap Features
 
-- Multiple FPC Channels: The current version only supports a single FPC Channel; it is our intention to support arbitrary numbers of Channels of both FPC and regular Fabric in future releases
-- Endorsing Peers and Policies: The current version supports only a single designated FPC Endorsing Peer; it is our intention to support multiple FPC Endorsing Peers in the upcoming MVP release. In future releases this would enable complex Endorsement Policies as described above.
-- WebAssembly Chaincode: A primary goal for FPC moving forward is to support WebAssembly chaincode, and by extension all languages that compile to WASM. There has already been extensive development of a high-performance open source WASM Interpreter / Compiler for Intel SGX Enclaves in the Private Data Objects project, and our current plan is to adopt that capability in the next major phase of FPC. FPC's modular architecture has been designed from the beginning to enable this drop-in capability.
-- Other TEEs: The FPC team is also participating in early discussions in the Confidential Computing Consortium, which aims to provide a standardized way of deploying WASM across multiple TEE technologies. We hope to leverage this work when extending FPC to support these other TEEs.
-- Private Data Collections: We have not tested the combination of FPC with Private Colletions in Fabric 2.0, but intend to support this combination of features in a future release.
+- WebAssembly Chaincode: A primary goal for FPC moving forward is to support WebAssembly chaincode, and by extension all languages that compile to WASM.
+There has already been extensive development of a high-performance open source WASM Interpreter / Compiler for Intel SGX Enclaves in the Private Data Objects project, and our current plan is to adopt that capability in the next major phase of FPC.
+FPC's modular architecture has been designed from the beginning to enable this drop-in capability.
 
+- Other TEEs: The FPC team is also participating in early discussions in the Confidential Computing Consortium, which aims to provide a standardized way of deploying WASM across multiple TEE technologies.
+We hope to leverage this work when extending FPC to support these other TEEs.
+
+- Endorsing Policies: The current version supports only a single designated FPC Endorsing Peer; it is our intention to support multiple FPC Endorsing Peers in the upcoming MVP release.
+In future releases this would enable rich Endorsement Policies as described above.
+
+- Private Data Collections: We have not tested the combination of FPC with Private Collections in Fabric 2.0, but intend to support this combination of features in a future release.
+
+- Multiple FPC Channels: The current version only supports a single FPC Channel; it is our intention to support arbitrary numbers of Channels of both FPC and regular Fabric in future releases.
 
 # Drawbacks
 [drawbacks]: #drawbacks
