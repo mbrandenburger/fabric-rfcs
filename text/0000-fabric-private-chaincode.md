@@ -76,8 +76,12 @@ FPC Registry: Also referred to as the ERCC, this is a component which maintains 
 
 FPC Validator: This validation complements the Peer validation logic by validating transactions produced by an FPC Chaincode. It does this by checking that each transaction has been cryptographically signed (endorsed) by a Chaincode Enclave that is listed in the FPC Registry and is authorized for that chaincode. 
 
-FPC Client SDK extension: This extends the NodeSDK (or Go SDK) with extra functionality that allows users to write end-to-end secure FPC-based applications. In particular, the client SDK extension will provide these core functions: 1) FPC transaction proposal creation (including transparent encryption of arguments) 2) FPC transaction proposal response validation and decryption of the result; 3) FPC deployment/setup functionality.
+FPC Client SDK extension: This extends the NodeSDK (or Go SDK) with extra functionality that allows users to write end-to-end secure FPC-based applications. 
+In particular, the client SDK extension will provide these core functions: 1) FPC transaction proposal creation (including transparent encryption of arguments) 2) FPC transaction proposal response validation and decryption of the result; 3) FPC deployment/setup functionality.
 The encryption of transaction arguments in the proposal is performed by the Client SDK "under the covers" without requiring any special action by the users.
+With FPC the users still use normal invoke/query functions to issue transaction
+invocations.  For the MVP, we intend to support the peer CLI only. Extended support for the NodeSDK (or Go SDK) will be future work.
+
 
 FPC SDK: The FPC SDK contains a set of tools to write and build chaincodes. In particular, the SDK contains a build-chain to link a chaincode against our chaincode library and produce a deployment artifact that can be executed by the FPC runtime.
 
