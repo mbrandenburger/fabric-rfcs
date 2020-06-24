@@ -145,11 +145,11 @@ To illustrate how the FPC architecture works and how it ensures robust end-to-en
 	If these validation processes succeed,the transaction is marked valid and is committed to the local ledger of the Peer. The Write Set is committed to the World State. This completes the transaction.
 
 
-### Subsequent Query and Validation of World State Data by FPC Chaincodes
+## Subsequent Query and Validation of World State Data by FPC Chaincodes
 
 Subsequent to the transaction described above: When any FPC Chaincode accesses the World State, the FPC Shim is responsible not only for passing the query to the Peer but also querying the Ledger Enclave for the Integrity Metadata for the Key in question. It performs a cryptographic hash of the Key Value Pair of World State returned by the Peer and checks it against the Integrity Metadata from the Ledger Enclave for that key. If the hashes do not match, it detects an integrity violation.
 
-### Encrypted Elements
+## Encrypted Elements
 
 ![Encryption](../images/FPC-Encryption.png)
 
@@ -158,6 +158,7 @@ Encrypted elements of the FPC architecture (over and above those in Fabric, such
 - The results of execution in a proposal response message returned to the Client
 - All contents of memory in both the Chaincode Enclave(s) and the Ledger Enclave
 - All FPC transaction read/writesets are written to the Ledger (by default).
+Note that with the exception of the results, where also a legitimate requestor knows the secret keys, all secret/private keys are known only by to the enclaves or, for memory encryption, to the HW memory encryption engine (with the hardware also enforcing that only legitimate enclaves have access to the unencrypted memory).
 
 
 ## Requirements
@@ -173,7 +174,7 @@ Encrypted elements of the FPC architecture (over and above those in Fabric, such
 
 In order to focus the development resources on the core components of FPC, the MVP excludes certain Fabric features, which will be added in the future.
 
-- Multiple Implementations for a Single Chaincode - this feature added in Fabric 2.0 is fundamentally incompatible with FPC's architecture: for chaincodes to be considered equivalent they must be bit-for-bit identical in order to generate matching identities (i.e. MRENCLAVE)
+- Multiple Implementations for a Single Chaincode -- a feature added in Fabric 2.0 -- is fundamentally incompatible for private chaincode like FPC where _all_ information flows have to be controlled: for FPC chaincodes to be considered equivalent they must be bit-for-bit identical in order to generate matching identities (i.e. MRENCLAVE)
 - Arbitrary endorsement policies
 - State-based endorsement
 - Custom endorsement / validation plugins for FPC
@@ -209,7 +210,7 @@ This process is similar to the validation step as described above; the FPC clien
 
 While the management API for Fabric is mostly unchanged, some modifications are needed for FPC to work. 
 In particular, FPC extends the Fabric's lifecycle API with additional commands to create an FPC enclave and handle the key provisioning.
-These are detailed separately in this document: [Link](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/docs/design/fabric-v2%2B/fpc-management.md)
+These are detailed separately in the [FPC Management API document](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/docs/design/fabric-v2%2B/fpc-management.md)
 
 ## FPC Shim
 
