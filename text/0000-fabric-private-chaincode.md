@@ -77,10 +77,10 @@ FPC Registry: Also referred to as the ERCC, this is a component which maintains 
 FPC Validator: This validation complements the Peer validation logic by validating transactions produced by an FPC Chaincode. It does this by checking that each transaction has been cryptographically signed (endorsed) by a Chaincode Enclave that is listed in the FPC Registry and is authorized for that chaincode. 
 
 FPC Client SDK extension: This extends the Fabric Client SDKs with extra functionality that allows users to write end-to-end secure FPC-based applications. 
-In particular, the client SDK extension will provide these core functions: 1) FPC transaction proposal creation (including transparent encryption of arguments) 2) FPC transaction proposal response validation and decryption of the result; 3) FPC deployment/setup functionality.
-The encryption of transaction arguments in the proposal is performed by the Client SDK "under the covers" without requiring any special action by the users, i.e.,
-the users still use normal invoke/query functions to issue FPC transaction
-invocations.  For the MVP, we intend to support the peer CLI only. Extended support for the NodeSDK (or Go SDK) will be future work.
+In particular, the client SDK extension will provide these core functions: 1) FPC transaction proposal creation (including transparent encryption of arguments) 2) FPC transaction proposal response validation and decryption of the result.
+The encryption and decryption is performed by the Client SDK "under the covers" without requiring any special action by the users, i.e.,
+the users still use normal invoke/query functions to issue FPC transaction invocations.
+For the MVP, we intend to support the peer CLI only. Extended support for the NodeSDK (or Go SDK) will be future work.
 
 
 FPC SDK: The FPC SDK contains a set of tools to write and build chaincodes. In particular, the SDK contains a build-chain to link a chaincode against our chaincode library and produce a deployment artifact that can be executed by the FPC runtime.
@@ -276,11 +276,20 @@ The Ordering Service is treated as a trusted element in FPC networks, but securi
 
 - New Runtime Environment: In order to create a TEE-enabled runtime for FPC chaincode, the initial FPC implementation uses a Go wrapper around a C++ shim to enable interaction between the Peer and the Enclave, which didn’t support Go code when the project started. We also use a Peer CLI wrapper to hide Enclave-specific operations. This wrapper approach might not be ideal for compatibility with Fabric build and lifecycle management. As described above, we want to use the new External Launcher feature of Fabric 2.0 to address these issues, and hope to work out the details through the RFC process.
 
-- Trusted Ledger Validation: In order to make a trusted “oracle” of information on the current world state, we’ve essentially had to replicate the Peer’s existing validation mechanism inside an Enclave, in C++ - an inefficient duplication of functionality that could lead to version synchronization problems. We hope to explore a path toward a modular validation mechanism that would eliminate this redundancy; possibly enabled by recent work on supporting Go inside the TEE.
+- Trusted Ledger Validation: In order to make a trusted "oracle" of information on the current world state, we’ve essentially had to replicate the Peer’s existing validation mechanism inside an Enclave, in C++ - an inefficient duplication of functionality that could lead to version synchronization problems. 
+We hope to explore a path toward a modular validation mechanism that would eliminate this redundancy; possibly enabled by recent work on supporting Go inside the TEE.
+Moreover, the Trusted Ledger is integrated using a system chaincode that
+requires to recompile the Peer.  Integrating the Trusted Ledger as a
+systemchaincode has several advantages, such as, the Peer ensures that there exists only a single instance of the Trusted Ledger; and a FPC chaincode can
+access the Trusted Ledger using the chaincode interface.
 
 - Attestation-Based Endorsements: In order to integrate cryptographic Attestation of the TEE with Fabric endorsements, we created custom endorsement and validation plugins and include the enclave signature as part of the response payload. This added payload and the need for every Peer to run a custom validation plugin seem undesirable in the long term. Our current plan is to create a custom Membership Service Provider to replace the original mechanism. The new TEE MSP type would treat TEEs as members of an Org, replacing the Peer’s endorsing signature with a TEE Signature. We believe this approach would be more elegant and flexible, and would lay the ground for easier enablement of new TEE types.
 
-- Go plugins for Trusted Ledger and Validation: In order to build FPC without recompiling the Peer, the current implementation makes use of Go plugins to enable our Trusted Ledger and Validation functions in the Peer. We understand that Go plugins may not be viable long-term; if they were no longer to be supported, we would have to recompile the Peer.
+- Go plugins for FPC Validation: In order to verify FPC transaction signatures, additional checks during transaction validation are needed. 
+In particular, for a FPC transaction, the validation has to check that the signature verification key belongs to a registered FPC enclave.
+Fortunately, Fabric provides support for custom validation plugins that allow to implement the FPC validation without changing and recompiling the Peer.  
+We understand that Go plugins may not be viable long-term; if they were no longer to be supported, we would need to use another transaction point to inject the FPC validation code into the peer.
+If recompiling the Peer is acceptable, this would be an alternative to go plugins.
 
 The FPC team welcomes the community’s advice on how each of these touch-points to Fabric should be handled going forward, and hope to solidify our plans for each element through the RFC process.
 
@@ -296,9 +305,12 @@ We hope to leverage this work when extending FPC to support these other TEEs.
 - Endorsing Policies: The current version supports only a single designated FPC Endorsing Peer; it is our intention to support multiple FPC Endorsing Peers in the upcoming MVP release.
 In future releases this would enable rich Endorsement Policies as described above.
 
-- Deployment Policies: We intend to support deployment policies which allow the users to define where a FPC chaincode is allowed to be deployed.  For instance, the user could define that a certain FPC chaincode can only executed by an endorsing peer on a on-premise node of a certain organization.  This allows enhanced risk management.
+- Risk Management and Deployment Policies: We intend to support deployment policies which allow the users to define where a FPC chaincode is allowed to be deployed.  For instance, the user could define that a certain FPC chaincode can only executed by an endorsing peer on a on-premise node of a certain organization.  This allows enhanced risk management.
 
 - Private Data Collections: We have not tested the combination of FPC with Private Collections in Fabric 2.0, but intend to support this combination of features in a future release.
+
+- Chaincode2Chaincode Invocations: The initial version of FPC does not support
+to call other chaincodes from a FPC chaincode; as this is a useful feature often used by chaincode applications, we intend to support this functionality in a future release.
 
 - Multiple FPC Channels: The current version only supports a single FPC Channel; it is our intention to support arbitrary numbers of Channels of both FPC and regular Fabric in future releases.
 
