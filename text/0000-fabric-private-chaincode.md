@@ -76,10 +76,10 @@ FPC Registry: Also referred to as the ERCC, this is a component which maintains 
 
 FPC Validator: This validation complements the Peer validation logic by validating transactions produced by an FPC Chaincode. It does this by checking that each transaction has been cryptographically signed (endorsed) by a Chaincode Enclave that is listed in the FPC Registry and is authorized for that chaincode. 
 
-FPC Client SDK extension: This extends the NodeSDK (or Go SDK) with extra functionality that allows users to write end-to-end secure FPC-based applications. 
+FPC Client SDK extension: This extends the Fabric Client SDKs with extra functionality that allows users to write end-to-end secure FPC-based applications. 
 In particular, the client SDK extension will provide these core functions: 1) FPC transaction proposal creation (including transparent encryption of arguments) 2) FPC transaction proposal response validation and decryption of the result; 3) FPC deployment/setup functionality.
-The encryption of transaction arguments in the proposal is performed by the Client SDK "under the covers" without requiring any special action by the users.
-With FPC the users still use normal invoke/query functions to issue transaction
+The encryption of transaction arguments in the proposal is performed by the Client SDK "under the covers" without requiring any special action by the users, i.e.,
+the users still use normal invoke/query functions to issue FPC transaction
 invocations.  For the MVP, we intend to support the peer CLI only. Extended support for the NodeSDK (or Go SDK) will be future work.
 
 
@@ -175,9 +175,9 @@ In order to focus the development resources on the core components of FPC, the M
 
 - Multiple Implementations for a Single Chaincode - this feature added in Fabric 2.0 is fundamentally incompatible with FPC's architecture: for chaincodes to be considered equivalent they must be bit-for-bit identical in order to generate matching identities (i.e. MRENCLAVE)
 - Arbitrary endorsement policies
-- Chaincode-to-chaincode invocations (cc2cc)
 - State-based endorsement
 - Custom endorsement / validation plugins for FPC
+- Chaincode-to-chaincode invocations (cc2cc)
 - Private Collections
 
 
@@ -213,13 +213,13 @@ These are detailed separately in this document: [Link](https://github.com/hyperl
 
 As described above, FPC follows the programming model used in the standard Fabric Go shim and offers a C++ based Chaincode Library / Shim to FPC chaincode developers. 
 For MVP, the FPC Shim comprises a subset of the standard Fabric Shim and is complemented in the future.
-These details are documented separately in the Shim header file itself: [Link](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/ecc_enclave/enclave/shim.h)
+These details are documented separately in the Shim header file itself: **[ecc_enclave/enclave/shim.h](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/ecc_enclave/enclave/shim.h)**
 
 ## TEE platform support
 
 Currently, our FPC Runtime and the SDK focuses on Intel SGX SDK. However, components such as the FPC Registry are already designed to support attestations by other TEE platforms as they mature and gain remote attestation capabilities. Also, other components such as the Go part of the FPC chaincode library don't have an Intel SGX depency and can easily be reused. We plan to explore other TEE platforms such as AMD SEV in the future.
 
-## A Opportunity for Endorsement Policies
+## An Opportunity for richer Endorsement Policies
 
 Using FPC enables a new way to write Endorsement Policies. In particular, it enables one to create policies which take into account that a chaincode is executed in a protected environment (i.e., TEE). Depending on the workload, this can reduce the number of required endorsements and still protect the integrity of the execution result.
 
@@ -359,6 +359,3 @@ The primary unresolved questions in FPC relate to the “Fabric Touchpoints” a
 - A custom MSP is one way to replace the custom validation and endorsement plugins in the current implementation. However, from previous discussion we learned that custom MSPs are sometimes cumbersome. Is there a better way?
 
 - With removing go-plugin support, FPC integration requires to be compiled with a peer. Is there a better alternative?  
-
-
-
