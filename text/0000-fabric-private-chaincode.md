@@ -269,7 +269,7 @@ This section details the turn-up process for all elements of FPC, including an e
 
 	Next, the new Enclave returns its newly created Public keys (both signing and encryption) to the FPC Chaincode, which signs them for its Org and returns the signature to the enclave, thereby taking ownership of the new Enclave for that Org. The Enclave now generates a quote and seals its state including all the names, versions, keys, and IDs just created. It returns the public keys and sealed state and quote to the Chaincode, which returns them to the FPC Shim's Go wrapper.
     The shim then stores the sealed state in its local storage.
-    This sealed state enables recreating FPC Chaincode enclave and reprovisioning it with the private keys and correct state,
+    This sealed state enables recreating the FPC Chaincode enclave and reprovisioning it with the private keys and correct state,
     e.g., during restart of the Peer or because the external builder restarts the chaincode previously stopped due to idleness.
     Note that the properties of the seal operation guarantee that only an enclave running the correct FPC Chaincode will be able to unseal that information.
 
