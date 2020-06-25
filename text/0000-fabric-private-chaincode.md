@@ -267,7 +267,11 @@ This section details the turn-up process for all elements of FPC, including an e
     In particular, when creating the enclave, the wrapper also fetches the MRENCLAVE and Channel ID of the Ledger Enclave and passes them with the create command.
 	Now, having all necessary information, the new Enclave creates public and private signing and encryption key pairs and an FPC Chaincode ID which is a hash of the Public Signing Key. Moreover, the new Chaincode Enclave binds to the trusted Ledger Enclave using the information as received during its creation.
 
-	Next, the new Enclave returns its newly created Public keys (both signing and encryption) to the FPC Chaincode, which signs them for its Org and returns the signature to the enclave, thereby taking ownership of the new Enclave for that Org. The Enclave now generates a quote and seals its state including all the names, versions, keys, and IDs just created. It returns the public keys and sealed state and quote to the Chaincode, which returns them to the FPC Shim's Go wrapper. This then stores the sealed state parameters in its local storage.
+	Next, the new Enclave returns its newly created Public keys (both signing and encryption) to the FPC Chaincode, which signs them for its Org and returns the signature to the enclave, thereby taking ownership of the new Enclave for that Org. The Enclave now generates a quote and seals its state including all the names, versions, keys, and IDs just created. It returns the public keys and sealed state and quote to the Chaincode, which returns them to the FPC Shim's Go wrapper.
+    The shim then stores the sealed state in its local storage.
+    This sealed state enables recreating FPC Chaincode enclave and reprovisioning it with the private keys and correct state,
+    e.g., during restart of the Peer or because the external builder restarts the chaincode previously stopped due to idleness.
+    Note that the properties of the seal operation guarantee that only an enclave running the correct FPC Chaincode will be able to unseal that information.
 
 	Finally, the FPC Shim's Go wrapper sends the Quote to the Attestation Service online. This service verifies that it was signed by a valid TEE and returns the Attestation. This is, essentially, the TEE vendor’s signature on all the parameters of the TEE and the FPC Chaincode proving that that it is a legitimate TEE running a correct version of software and a particular chaincode. The wrapper marks the Chaincode ID as 'installed' and returns the Attestation and the Public Signing Key to the Admin.
 
@@ -344,6 +348,12 @@ In future releases this would enable rich Endorsement Policies as described abov
 to call other chaincodes from a FPC chaincode; as this is a useful feature often used by chaincode applications, we intend to support this functionality in a future release.
 
 - Multiple FPC Channels: The current version only supports a single FPC Channel; it is our intention to support arbitrary numbers of Channels of both FPC and regular Fabric in future releases.
+
+- Trusted Ledger State Snapshot:
+  Currently, the Trusted Ledger keeps the ledger meta-data state in secure memory only, i.e., it does not persist it.
+  This means that on restart of the peer, the complete transaction-log has to be re-read and also limits how large the ledger meta state can be.
+  In a future release, we will add secure storage of the meta-data state which will address both of these concerns and will provide better restart performance and better scalability.
+
 
 # Drawbacks
 [drawbacks]: #drawbacks
