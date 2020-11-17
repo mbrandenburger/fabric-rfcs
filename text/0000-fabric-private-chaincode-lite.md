@@ -28,20 +28,24 @@ nav_order: 3
 # Summary
 [summary]: #summary
 
-This RFC aims to introduce a new security feature for Hyperledger Fabric called Fabric Private Chaincode (FPC) that enhances data confidentiality for chaincodes by executing them in a Trusted Execution Environment (TEE), such as Intel&reg; SGX.
+This RFC introduces a new framework called Fabric Private Chaincode (FPC), built on Hyperledger Fabric.
+FPC enhances data confidentiality for chaincodes by executing them in a Trusted Execution Environment (TEE), such as Intel&reg; SGX.
+Most importantly, FPC protects transactional data while in use by the chaincode, in transit to/from a client, and stored on the ledger.
+Hence, differently from typical chaincode applications, curious Fabric peers can only handle encrypted data related to FPC chaincodes.
+Ultimately, this mitigates the requirement for endorsing peers to be fully trusted for confidentiality.
 
-FPC is a framework to develop and run chaincodes with strong privacy guarantees.
-With FPC, a chaincode can process transaction arguments and state without revealing/exposing the contents to anybody, including the endorsing peers.
-In particular, clients can establish a secure channel with the FPC-Lite chaincode (as opposed to the peer hosting the chaincode) which preserves the confidentiality of trasaction arguments and responses.
-Also, the TEE preserves the confidentiality of the data, even from the hosting peer, while the chaincode processes it.
-Finally, the TEE allows to maintain a secret cryptographic key, which the chaincode uses to encrypt and protect the integrity of any data that it stores on the ledger.
+The design of FPC thus extends the existing model of privacy in Fabric, enabling the secure implementation of additional use cases.
+Some examples include private voting systems, high-stakes sealed-bid auctions, and confidential analytics.
+FPC is available open-source on Github (https://github.com/hyperledger-labs/fabric-private-chaincode) as patch-free runtime extension of Hyperledger Fabric v2.2.
 
-As a result, other parties (both clients and peers) cannot examine the state of the transactions either in the chaincode or on the ledger. Hence, FPC helps to protects sensitive data even from compromised endorsing peers and other unauthorised parties.
-FPC provides the capabilities to verify that a chaincode and the data are protected, that is, Fabric peers and clients can receive cryptographic assurance that the correct chaincode is being run without tampering inside the TEE by means of a hardware-based remote attestation.
+**FPC in a nutshell.**
+FPC operates by allowing a chaincode to process transaction arguments and state without exposing the contents to anybody, including the endorsing peers.
+Also, the framework provides interested parties (clients and peers) with the capability to establish trust in an FPC chaincode.
+This is achieved by means of a hardware-based remote attestation, which parties use to verify that a genuine TEE protects the intended chaincode and its data.
+Clients can thus establish a secure channel directly with the FPC chaincode (as opposed to the peer hosting the chaincode) which preserves the confidentiality of trasaction arguments and responses.
+On the hosting peer, the TEE preserves the confidentiality of the data while the chaincode processes it.
+Such data includes secret cryptographic keys, which the chaincode uses to secure any data that it stores on the public ledger.
 
-This new model of trust for Fabric smart contracts makes possible high-stakes markets such as private voting systems and sealed-bid auctions; which aren’t supported by the existing model of privacy in Fabric because of the requirement for endorsing peers to be fully trusted for confidentiality.
-
-A prototype implementation of FPC is available as Hyperledger Lab on github (https://github.com/hyperledger-labs/fabric-private-chaincode).
 
 # Motivation
 [motivation]: #motivation
