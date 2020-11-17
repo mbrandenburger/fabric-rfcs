@@ -457,9 +457,17 @@ We recommend reading the chaincode development and deployment sections to know m
 
 In order to focus the development resources on the core components of FPC, the MVP `FPC Lite` excludes certain Fabric features, which will be added in the future.
 
-- Multiple implementations for a single chaincode -- a feature added in Fabric v2.0. 
-***not in current arch, but if you know other versions behave similarly and do not leak... good! but cannot install and use arbitrary package***
-   -- is fundamentally incompatible for private chaincode like FPC where _all_ information flows have to be controlled: for FPC chaincodes to be considered equivalent they must be bit-for-bit identical in order to generate matching identities (i.e. MRENCLAVE).
+- Multiple implementations for a single chaincode.
+This feature is supported in Fabric v2 and gives organizations the freedom to implement and package their own chaincode.
+Ultimately, the channel can use different chaincode implementations as long as these expose the same observable actions (i.e., transaction responses), independently from the actually executed binaries.
+
+FPC chaincodes have a stronger requirement: observable actions must match and non-observable actions must be known.
+The latter makes sure that a specific chaincode implementation can be examined for potential leaks of confidential data.
+Hence, clients can establish trust in how the chaincode executable treats their sensitive data.
+
+For a given chaincode, the presented FPC architecture supports a single implementation working in a channel.
+Most importantly, the version field of the chaincode definition precisely identifies the chaincode's binary executable.
+
 - Multiple key/value pairs and composite keys as well as secure access to MSP identities via `getCreator` will be supported once below [Roll-back Protection Extension](#rollback-protection-extension) is added.
 - Arbitrary endorsement policies
 - State-based endorsement
