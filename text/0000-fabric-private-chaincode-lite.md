@@ -459,7 +459,7 @@ It allows for different chaincode implementations as long as changes to the ledg
 FPC chaincodes have a stronger requirement: Not only must we be assured of the application integrity but we also require that all information flows be controlled to meet our confidentiality requirements.   As the execution during endorsement is unobservable by other organizations, they will require the assurance that any chaincode getting access to the state decryption keys, and hence sensitive information, will never leak unintended information.  Therefore, the implementation of a chaincode must allow for public examination for (lack of) potential leaks of confidential data.
 Only then clients can establish trust in how the chaincode executable treats their sensitive data.
 
-For a given chaincode, the presented FPC architecture supports a single implementation working in a channel.
+For a given chaincode, the FPC Lite currently supports only a single active implementation.
 Most importantly, the version field of the chaincode definition precisely identifies the chaincode's binary executable.
 
 - Multiple key/value pairs and composite keys as well as secure access to MSP identities via `getCreator` will be supported once below [Roll-back Protection Extension](#rollback-protection-extension) is added.
