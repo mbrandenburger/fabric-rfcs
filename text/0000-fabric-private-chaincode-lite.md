@@ -459,7 +459,7 @@ In order to focus the development resources on the core components of FPC, the M
 
 - Multiple implementations for a single chaincode.
 This feature is supported in Fabric v2 and gives organizations the freedom to implement and package their own chaincode.
-Ultimately, the channel can use different chaincode implementations as long as these expose the same observable actions (i.e., transaction responses), independently from the actually executed binaries.
+It allows for different chaincode implementations as long as changes to the ledger state implement the same agreed upon state machine, i.e., the application integrity is ensured.
 
 FPC chaincodes have a stronger requirement: observable actions must match and non-observable actions must be known.
 The latter makes sure that a specific chaincode implementation can be examined for potential leaks of confidential data.
