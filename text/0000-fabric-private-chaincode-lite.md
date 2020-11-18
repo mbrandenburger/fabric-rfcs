@@ -461,9 +461,8 @@ In order to focus the development resources on the core components of FPC, the M
 This feature is supported in Fabric v2 and gives organizations the freedom to implement and package their own chaincode.
 It allows for different chaincode implementations as long as changes to the ledger state implement the same agreed upon state machine, i.e., the application integrity is ensured.
 
-FPC chaincodes have a stronger requirement: observable actions must match and non-observable actions must be known.
-The latter makes sure that a specific chaincode implementation can be examined for potential leaks of confidential data.
-Hence, clients can establish trust in how the chaincode executable treats their sensitive data.
+FPC chaincodes have a stronger requirement: Not only must we be assured of the application integrity but we also require that all information flows be controlled to meet our confidentiality requirements.   As the execution during endorsement is unobservable by other organizations, they will require the assurance that any chaincode getting access to the state decryption keys, and hence sensitive information, will never leak unintended information.  Therefore, the implementation of a chaincode must allow for public examination for (lack of) potential leaks of confidential data.
+Only then clients can establish trust in how the chaincode executable treats their sensitive data.
 
 For a given chaincode, the presented FPC architecture supports a single implementation working in a channel.
 Most importantly, the version field of the chaincode definition precisely identifies the chaincode's binary executable.
