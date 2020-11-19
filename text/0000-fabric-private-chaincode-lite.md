@@ -218,6 +218,7 @@ The [Roll-back Protection Extension](#rollback-protection-extension) to FPC Lite
 
 ### Use case: Privacy-enhanced Federated Learning on FPC Lite
 
+***TODO: @Jeb can you please make pass on below and replace this section as appropriate with info from HBP, UMBC or alike***
 For example, Federated Learning on private sensitive information is a real-world use-case which FPC Lite enables securely on Hyperledger Fabric.
 To illustrate this, consider the case of training a model, e.g, Convolutional Neural Network (CNN), for detecting brain abnormalities such as precancerous lesions or aneurysms.
 To achieve high accuracy we need considerably more data than single entities (e.g., a hospital) usually has.
