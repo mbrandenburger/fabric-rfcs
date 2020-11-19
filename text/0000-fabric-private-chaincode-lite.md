@@ -345,7 +345,6 @@ The key material for chaincode state encryption and the chaincode encryption key
 The enclave initialization completes by returning the `credentials` of the FPC Chaincode.
 The credentials contain all public chaincode parameters, including the enclave public signature key.
 In particular, these information are protected through the process of an attestation protocol.
-This protocol may be different depending on the TEE technology used. 
 Using Intel® SGX, the enclave produces attested data that allows to verify that a legitimate TEE is running the expected code.
 Importantly, the code identity (`MRENCLAVE`) of the FPC Chaincode executed inside the enclave is part of the attested data.
 The enclave initialization/creation is illustrated in step 3 - 7. in the figure above.
