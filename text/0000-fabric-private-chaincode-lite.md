@@ -339,7 +339,9 @@ Internally, the initialization command operates as follows:
 
 First, it issues an `initEnclave` query which reaches the FPC Shim.
 The shim initializes (creates) the enclave (which will process FPC chaincode invocations) with the chaincode parameters received from the peer, namely: the chaincode definition and the channel identifier.
-Then, the enclave generates public/private key-pairs for signing and encryption. The public signature key is used as a enclave identifier.  The key material for chaincode state encryption is generated in a subsequent key generation protocol and we refer to [FPC specification](../images/fpc/full-detail/fpc-key-dist.png) for more details.
+Then, the enclave generates public/private key-pairs for signing and encryption.
+The public signature key is used as a enclave identifier. 
+The key material for chaincode state encryption and the chaincode encryption key pair are generated in a subsequent key generation protocol and we refer to [FPC specification](../images/fpc/full-detail/fpc-key-dist.png) for more details.
 The enclave initialization completes by returning the `credentials` of the FPC Chaincode.
 The credentials contain all public chaincode parameters, including the enclave public signature key.
 In particular, these information are protected through the process of an attestation protocol.
