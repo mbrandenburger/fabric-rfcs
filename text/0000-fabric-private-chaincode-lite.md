@@ -287,10 +287,7 @@ Hence, they will be visible to the FPC chaincode in subsequent invocations.
 
 ## Deployment Process
 
-This section details the turn-up process for a FPC chaincode.
-The normal Fabric chaincode deployment is extended with the creation and registration of a chaincode enclave as illustrated in the figure below.
-
-![Deployment](../images/fpc/high-level/Slide3.png)
+This section details of the initial setup and the steps to deploy FPC chaincode.
 
 ### Channel Setup and Enclave Registry
 
@@ -305,7 +302,17 @@ Therefore, ERCC must be installed on the channel.
 The organizations follow the usual procedures the install ERCC, approve it and commit it.
 It is recommended to specify a strong endorsement policy (e.g., majority), since the Enclave Registry operations are integrity-sensitive.
 
-### Deploy a FPC Chaincode Package
+### Deployment of a FPC Chaincode Package
+
+There are three steps involved in deploying FPC chaincode:
+
+1. the Fabric Lifecycle 2.0 deployment steps
+1. the creation and registration of a chaincode enclave
+1. the creation and registration of chaincode keys
+
+These steps are explained in more details in the following three sections.
+
+#### Fabric Lifecycle 2.0 deployment steps
 
 A FPC Chaincode package is no different than a regular Fabric package.
 Hence, the deployment follows the standard Fabric 2.0 lifecycle process using `install`, `approveformyorg`, and `commit` commands.
@@ -317,9 +324,13 @@ The agreement is illustrated in step 1 in the figure above.
 It is recommended to specify a strong endorsement policy (e.g., majority) for the FPC Chaincode, since the Enclave Endorsement Validation operations are integrity-sensitive.
 
 Following this deployment step, from a Fabric perspective, the FPC Chaincode is ready to process transactions.
-However, any FPC Chaincode invocation will return an error because the FPC Chaincode Enclave is still uninitialized. 
+However, any FPC Chaincode invocation will return an error because the FPC Chaincode Enclave is still uninitialized and no chaincode keys have been generated.
 
-### Enclave Initialization and Registration
+#### Enclave Initialization and Registration
+
+This part is illustrated in step 2-14 of below figure. (Step 1 summarizes the [Fabric Lifecycle 2.0 deployment steps](#fabric-lifecycle-2.0-deployment-steps).)
+
+![Deployment](../images/fpc/high-level/Slide3.jpg)
 
 **(Note that FPC Lite makes the simplifying assumption that, for each deployed FPC Chaincode, a single enclave is initialized and registered.)**
 
@@ -335,7 +346,6 @@ First, it issues an `initEnclave` query which reaches the FPC Shim.
 The shim initializes (creates) the enclave (which will process FPC chaincode invocations) with the chaincode parameters received from the peer, namely: the chaincode definition and the channel identifier.
 Then, the enclave generates public/private key-pairs for signing and encryption.
 The public signature key is used as a enclave identifier. 
-The key material for chaincode state encryption and the chaincode encryption key pair are generated in a subsequent key generation protocol and we refer to [FPC specification](../images/fpc/full-detail/fpc-key-dist.png) for more details.
 The enclave initialization completes by returning the `credentials` of the FPC Chaincode.
 The credentials contain all public chaincode parameters, including the enclave public signature key.
 In particular, these information are protected through the process of an attestation protocol.
@@ -354,15 +364,31 @@ That is, the publicly-verifiable evidence is verified against the root of trust 
 If the validation succeeds, the enclave credentials are stored on the ledger and thus available to channel members. 
 Note that the recommended FPC Enclave Registry endorsement policy is meant to protect the integrity of these checks and the credentials stored on the ledger.
 
-The enclave registration is illustrated in step 10 - 12. in the figure above.
+The enclave registration is illustrated in step 10 - 14. in the figure above.
 This completes the deployment of a FPC chaincode.
 
+#### Chaincode Key Generation and Registration
+
+The key material for chaincode state encryption and the chaincode encryption key pair are generated in a subsequent key generation protocol. This is done also as part of the `initEnclave` admin command and illustrated in following figure
+
+![Transaction](../images/fpc/high-level/Slide4.jpg)
+
+This follows a similar pattern to the enclave registration with a request to the enclave
+-- generating the chaincode encryption key pair and the state encryption key --
+followed by a registration in the Enclave Registry.
+However, instead of attestation to authenticate the enclave response, 
+the message is signed by the enclave signature key and 
+the corresponding verification of in the Enclave Registry checks first that the corresponding public key is properly registered for that chaincode before verifying the signature itself.
+The registered public key (denoted `EK` in the figure) is what is later used to encrypt the arguments of a chaincode invocation, see below [FPC Transaction Flow](#fpc-transaction-flow).
+
+For more details on this and the prior steps, we refer to the [registration](../images/fpc/full-detail/fpc-registration.png) and
+the (first part of the) [key distribution](../images/fpc/full-detail/fpc-key-dist.png) protocols of the FPC specification.
 
 ## FPC Transaction Flow
 
-Now we describe the FPC transaction flow comprising client invocation, chaincode, execution, and enclave endorsement validation as illustrated in the figure below. 
+Now we describe the FPC transaction flow comprising client invocation, chaincode, execution, and enclave endorsement validation as illustrated in the figure below.
 
-![Transaction](../images/fpc/high-level/Slide4.png)
+![Transaction](../images/fpc/high-level/Slide5.png)
 
 ### Client Invocation
 
