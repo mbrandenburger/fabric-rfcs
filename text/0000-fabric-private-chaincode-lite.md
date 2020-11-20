@@ -10,6 +10,7 @@ nav_order: 3
 - Fabric Component: Core (fill me in with underlined fabric component, core, orderer/consensus and etc.)
 - Fabric Issue: (leave this empty)
 
+<!-- @Angelo @Ale @Elli Please have a look at this version and comment inline or on github; whatever you prefer -->
 
 # Summary
 [summary]: #summary
