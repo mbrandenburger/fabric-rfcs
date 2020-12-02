@@ -193,9 +193,8 @@ The chaincode deployment follows mostly the standard Fabric procedure:
   A noteworthy FPC specific aspect is that the version used *must* be the code identity (i.e., `MRENCLAVE`) of the FPC Chaincode.
   ```bash
   peer lifecycle chaincode approveformyorg -o ${ORDERER} --channelID ${CH_ID} --name ${CC_ID} --version ${MRENCLAVE}
-  ```
-
-
+  ....
+  peer lifecycle chaincode commit -o ${ORDERER} --channelID ${CH_ID} --name ${CC_ID} --version ${MRENCLAVE}
   <!-- 
     - We might eventually want also to explain why requireing `version=MRENCLAVE` is necessary, 
       i.e., to get agreement among all participants on the functionality.  
@@ -654,4 +653,3 @@ describe keys and messages; what is attested
 Keys:
 
 Credentials < PK, bla bla>
-
