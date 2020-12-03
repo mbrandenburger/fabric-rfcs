@@ -1,10 +1,10 @@
 ---
 layout: default
-title: Fabric Private Chaincode - Lite
+title: Fabric Private Chaincode - 1.0
 nav_order: 3
 ---
 
-- Feature Name: Fabric Private Chaincode (FPC) - Lite
+- Feature Name: Fabric Private Chaincode (FPC) - 1.0
 - Start Date: 2020-01-28)
 - RFC PR: (leave this empty)
 - Fabric Component: Core (fill me in with underlined fabric component, core, orderer/consensus and etc.)
@@ -15,7 +15,7 @@ nav_order: 3
 # *Preamble*
 *This text is to put this PR into context with the old PR and hence has to be part of the description of the PR, not of the RFC itself, but for simplicity I include it now here, we just will have to move it to PR once we open the PR ...*
 
-This PR superceeds an earlier [PR#21](https://github.com/hyperledger/fabric-rfcs/pull/21). While PR#21 shares the same motivation of this PR, we realized that the proposed changes in PR21 were too intrusive and too complex for an initial realization of the concept of a (stronlgy) private chaincode. This PR remedies this by targeting first on a (interesting) subclass of use-cases which need that concept while vastely reducing complexity in the architecture, removing the need for any change in the core fabric code and still providing a clean roadmap to the bigger vision.  To differentiate between the two, we call the architecture presented here as *FPC Lite*.
+This PR superceeds an earlier [PR#21](https://github.com/hyperledger/fabric-rfcs/pull/21). While PR#21 shares the same motivation of this PR, we realized that the proposed changes in PR21 were too intrusive and too complex for an initial realization of the concept of a (stronlgy) private chaincode. This PR remedies this by targeting first on a (interesting) subclass of use-cases which need that concept while vastely reducing complexity in the architecture, removing the need for any change in the core fabric code and still providing a clean roadmap to the bigger vision.  To differentiate between the two, we call the architecture presented here as *FPC 1.0*.
 
 # Summary
 [summary]: #summary
@@ -26,7 +26,7 @@ Most importantly, FPC protects transactional data while in use by the chaincode,
 Hence, differently from typical chaincode applications, curious Fabric peers can only handle encrypted data related to FPC Chaincodes.
 Ultimately, this mitigates the requirement for endorsing peers to be fully trusted for confidentiality.
 
-The design of FPC thus extends the existing model of privacy in Fabric, enabling the secure implementation of additional use cases. An example of a new use-case enabled by the first end-to-end secure realization of that framework, called *FPC Lite*, are privacy-preserving federated analytics over data owned by multiple mutually mistrusting organizations.
+The design of FPC thus extends the existing model of privacy in Fabric, enabling the secure implementation of additional use cases. An example of a new use-case enabled by the first end-to-end secure realization of that framework, called *FPC 1.0*, are privacy-preserving federated analytics over data owned by multiple mutually mistrusting organizations.
 
 FPC is available open-source on Github (https://github.com/hyperledger-labs/fabric-private-chaincode) as patch-free runtime extension of Hyperledger Fabric v2.2.
 
@@ -43,7 +43,7 @@ Such data includes secret cryptographic keys, which the chaincode uses to secure
 [motivation]: #motivation
 <!-- 
     Description of section: General motivation on why Fabric does not cover use-cases having strong privacy requirement and that TEE/FPC can close that gap.
-    Note: At this level there is no distinction between full FPC and FPC Lite and hence use the term FPC through-out without qualification 
+    Note: At this level there is no distinction between full FPC and FPC 1.0 and hence use the term FPC through-out without qualification
     and also still mention all possible use-cases. 
     The distinction is done later in the architecture/design section
 -->
@@ -69,7 +69,7 @@ Overall, FPC adds another line of defense around a chaincode. Over time and with
 [functional-view]: #functional-view
 <!-- 
     Description of section: This section describes the functional view as experienced by developers of chaincode and applications interacting with it as well as admins deploying them.
-    Note: At this level there is no distinction between full FPC and FPC Lite and hence use the term FPC through-out without qualification. 
+    Note: At this level there is no distinction between full FPC and FPC 1.0 and hence use the term FPC through-out without qualification.
     The distinction is done later in the architecture/design section
 -->
 
@@ -77,7 +77,7 @@ Overall, FPC adds another line of defense around a chaincode. Over time and with
 
 Fabric Private Chaincode is best thought of as a way of running smart contract chaincode inside a Trusted Execution Environment (TEE), also called an _enclave_, for strong assurance of privacy and a more computation-efficient model of integrity.
 Programs executed in the TEE are held in encrypted memory even while running, and this memory can't be read in the clear even by a root user or privileged system process. Chaincode state is encrypted with keys only known to the chaincode. Each chaincode runs in its own TEE to provide the best possible isolation among chaincodes on an endorsing peer. Because the execution is opaque, a modified set of integrity controls is also implemented in order to be certain that what's running is exactly what is intended, without tampering.
-<!-- commented out as not provided by FPC Lite and anyway not crucial for this section:
+<!-- commented out as not provided by FPC 1.0 and anyway not crucial for this section:
 With FPC’s hardware-rooted cryptographic integrity mechanisms, it requires less redundancy of computation than in the standard model of Fabric to get a high level of trust.
 -->
 With FPC, a chaincode can process sensitive data, such as cryptographic material, health-care data, financial data, and personal data; without revealing it to the endorsing peer on which it runs.
@@ -204,7 +204,7 @@ In order to support the endorsement model of Fabric, chaincode enclaves executin
 That is, there is also a public/private key pair and a symmetric state encryption key per FPC Chaincode that are shared among all chaincode enclaves that run the same FPC Chaincode using the key distribution protocol.
 -->
 
-A detailed description (internal view) of the FPC deployment process is provided in the FPC Lite Architecture section below and can be found in the [Full Detail Diagrams](#full-detail-diagrams) section.
+A detailed description (internal view) of the FPC deployment process is provided in the FPC 1.0 Architecture section below and can be found in the [Full Detail Diagrams](#full-detail-diagrams) section.
 
 
 # Threat & Trust Model
@@ -225,26 +225,26 @@ Therefore, all participants/organizations trust a TEE (in particular, the FPC Ch
 - However, given above-mentioned trust assumptions on peers, a TEE (FPC Chaincode Enclave) cannot trust the hosting peer. Hence all data received via transaction invocations (e.g., the transaction proposal) or via state access operations (e.g., `get_state`) must be considered untrusted.
 
 
-# FPC Lite Architecture
+# FPC 1.0 Architecture
 [architecture]: #architecture
 <!-- 
-    Description of section: This section makes the FPC vs FPC Lite distinction (& related restrictions)
-    and then provides an outline of the architecture of FPC Lite.
-    Note: we should use here preferably the term FPC Lite rather than FPC.
+    Description of section: This section makes the FPC vs FPC 1.0 distinction (& related restrictions)
+    and then provides an outline of the architecture of FPC 1.0.
+    Note: we should use here preferably the term FPC 1.0 rather than FPC.
 -->
 
 In the previous sections we have introduced Fabric Private Chaincode and explained how it works from the end-user perspective.
 This section describes the FPC Architecture (internal view).
-The first realization of FPC is called *FPC Lite*.
+The first realization of FPC is called *FPC 1.0*.
 This realization enables a class of applications which require (chaincode-)private ledger state and private transaction requests and responses but do not require release of sensitive data conditioned on private ledger state. 
 This class includes smart contracts which operate on sensitive medical data, or enforce confidential supply chain agreements. 
 The former is illustrated in more details below.
 More detailed information on the constraints and related programming model restrictions plus a corresponding security analysis can be found in a [separate document](https://docs.google.com/document/d/1jbiOY6Eq7OLpM_s3nb-4X4AJXROgfRHOrNLQDLxVnsc/).
 
-<!-- The [Rollback Protection Extension](#rollback-protection-extension) to FPC Lite can enable support of an even larger class of applications such as private sealed-bid auctions or secure voting which do have intrinsic requirements of release of sensitive data conditioned on private state, e.g., a sealed bid auction outcome should be private until the auction closure is committed on the ledger. -->
+<!-- The [Rollback Protection Extension](#rollback-protection-extension) to FPC 1.0 can enable support of an even larger class of applications such as private sealed-bid auctions or secure voting which do have intrinsic requirements of release of sensitive data conditioned on private state, e.g., a sealed bid auction outcome should be private until the auction closure is committed on the ledger. -->
 
 
-### Use case: Privacy-enhanced Federated Learning on FPC Lite
+### Use case: Privacy-enhanced Federated Learning on FPC 1.0
 
 Ideal use cases for FPC 1.0 involve operations on private data that do not involve the conditional revelation of those data.
 For example, Federated Learning on private sensitive information is a real-world use-case which FPC 1.0 enables securely on Hyperledger Fabric.
@@ -278,11 +278,11 @@ For a detailed discussion, please see [the google documents in the references](#
 Conversely, use cases that are not ideally suited to our first realization of FPC involve revelation of private data conditional on the ledger state.
 For example, auctions or voting systems in which the bids/votes are kept private until some event such as the closure of a round.
 Such use cases may be subject to rollback attacks that may reveal private data in case of a compromised Peer. 
-These use cases should be avoided in FPC Lite but will be addressed in a future release of FPC, as described in the [Rollback Protection Extension](#rollback-protection-extension) for FPC Lite and our Roadmap.
+These use cases should be avoided in FPC 1.0 but will be addressed in a future release of FPC, as described in the [Rollback Protection Extension](#rollback-protection-extension) for FPC 1.0 and our Roadmap.
 
 ## Overview of Architecture
 
-The FPC Lite architecture is constituted by a set of components which are designed to work atop of an unmodified Hyperledger Fabric framework: the FPC Chaincode package and the Enclave registry chaincode, which run on the Fabric Peer; the FPC Client, which builds on top of the Fabric Client SDK. The architecture is agnostic to other Fabric components such as the ordering, gossip or membership services.
+The FPC 1.0 architecture is constituted by a set of components which are designed to work atop of an unmodified Hyperledger Fabric framework: the FPC Chaincode package and the Enclave registry chaincode, which run on the Fabric Peer; the FPC Client, which builds on top of the Fabric Client SDK. The architecture is agnostic to other Fabric components such as the ordering, gossip or membership services.
  
 ![Architecture](../images/fpc/high-level/Slide2.png)
 
@@ -498,7 +498,7 @@ We plan to explore other TEE platforms such as AMD SEV in the future.
 
 ## Fabric Touchpoints
 
-FPC Lite does ***not*** require any changes/modifications to Fabric (Peer).
+FPC 1.0 does ***not*** require any changes/modifications to Fabric (Peer).
 We recommend reading the chaincode development and deployment sections to know more about the private chaincode coding language and the use of Fabric's external builder and launcher capabilities.
 
 ## Requirements
@@ -512,7 +512,7 @@ We recommend reading the chaincode development and deployment sections to know m
 
 ## Fabric Features Not (Yet) Supported
 
-In order to focus the development resources on the core components of FPC, the FPC Lite initially excludes certain Fabric features, which will be added in the future.
+In order to focus the development resources on the core components of FPC, the FPC 1.0 initially excludes certain Fabric features, which will be added in the future.
 
 - Multiple implementations for a single chaincode.
 This feature is supported in Fabric v2 and gives organizations the freedom to implement and package their own chaincode.
@@ -521,7 +521,7 @@ It allows for different chaincode implementations as long as changes to the ledg
     FPC Chaincodes have a stronger requirement: Not only must we be assured of the application integrity but we also require that all information flows be controlled to meet our confidentiality requirements.   As the execution during endorsement is unobservable by other organizations, they will require the assurance that any chaincode getting access to the state decryption keys, and hence sensitive information, will never leak unintended information.  Therefore, the implementation of a chaincode must allow for public examination for (lack of) potential leaks of confidential data.
     Only then clients can establish trust in how the chaincode executable treats their sensitive data.
 
-    For a given chaincode, the FPC Lite currently supports only a single active implementation.
+    For a given chaincode, the FPC 1.0 currently supports only a single active implementation.
     Most importantly, the version field of the chaincode definition precisely identifies the chaincode's binary executable.
 
 - Multiple key/value pairs and composite keys as well as secure access to MSP identities via `getCreator` will be supported once below [Rollback-Protection Extension](#rollback-protection-extension) is added.
@@ -534,23 +534,23 @@ It allows for different chaincode implementations as long as changes to the ledg
 
 ## Rollback-Protection Extension
 
-FPC Lite is not designed for chaincodes which are implemented to release confidential data once some conditions are met on the ledger.
+FPC 1.0 is not designed for chaincodes which are implemented to release confidential data once some conditions are met on the ledger.
 In fact, although chaincodes can protect the confidentiality and integrity of any data that they store on the ledger, they have no means to verify whether such data has been committed.
 Hence, their hosting peer might provide them with legitimate yet stale, or non-committed, ledger data.
 
-FPC Lite does therefore not support for the class of applications that require a proof of committed ledger data.
+FPC 1.0 does therefore not support for the class of applications that require a proof of committed ledger data.
 This includes, for example, smart contracts implementing sealed auctions, or e-voting mechanisms.
 Arguably, these applications require checking whether a condition is met (e.g., "if the auction is closed") in order to release confidential data (e.g., "then the highest bid is X").
 
 Even though the lack of proof-of-committed ledger data appears to limit the use of FPC, additional means could be integrated on the application level to enable coverage of this larger class of private applications.
-Alternatively, an extension to the FPC Lite Architecture can address this limitation.
+Alternatively, an extension to the FPC 1.0 Architecture can address this limitation.
 In particular, the FPC framework can provide chaincodes with a verifiable proof of committed ledger data by implementing a trusted ledger enclave.
 The design documents referenced in [Design Documents](#design-documents) already outline the path to realize such architecture extension.
 We refer to this as the Full FPC specification.
 
 ## References
 
-The full detailed protocol specification of FPC Lite is documented in a series of UML Sequence Diagrams. Note that in addition to the FPC Lite specification, we already provide a proposal to extend FPC Lite to the Full FPC specification that addresses the limitations addressed in the previous section.
+The full detailed protocol specification of FPC 1.0 is documented in a series of UML Sequence Diagrams. Note that in addition to the FPC 1.0 specification, we already provide a proposal to extend FPC 1.0 to the Full FPC specification that addresses the limitations addressed in the previous section.
 
 - The [fpc-lifecycle-v2](../images/fpc/full-detail/fpc-lifecycle-v2.png) diagram describes the lifecycle of a FPC Chaincode, focusing in particular on those elements that change in FPC vs. regular Fabric.
 - The [fpc-registration](../images/fpc/full-detail/fpc-registration.png) diagram describes how an FPC Chaincode Enclave is created on a Peer and registered at the FPC Registry, including the Remote Attestation process.
@@ -564,9 +564,9 @@ The full detailed protocol specification of FPC Lite is documented in a series o
 
 Note: The source of the UML Sequence Diagrams are also available on the [FPC Github repository](https://github.com/hyperledger-labs/fabric-private-chaincode/tree/master/docs/design/fabric-v2%2B).
 
-Additional google documents provide details on FPC Lite:
-- The [FPC Lite for Health use case](https://docs.google.com/document/d/1jbiOY6Eq7OLpM_s3nb-4X4AJXROgfRHOrNLQDLxVnsc/) describes how FPC Lite enables a health care use case, without requiring a trusted ledger.
-- The [FPC Lite externalized endorsement validation](https://docs.google.com/document/d/1RSrOfI9nh3d_DxT5CydvCg9lVNsZ9a30XcgC07in1BY/) describes the FPC Lite enclave endorsement validation mechanism.
+Additional google documents provide details on FPC 1.0:
+- The [FPC 1.0 for Health use case](https://docs.google.com/document/d/1jbiOY6Eq7OLpM_s3nb-4X4AJXROgfRHOrNLQDLxVnsc/) describes how FPC 1.0 enables a health care use case, without requiring a trusted ledger.
+- The [FPC 1.0 externalized endorsement validation](https://docs.google.com/document/d/1RSrOfI9nh3d_DxT5CydvCg9lVNsZ9a30XcgC07in1BY/) describes the FPC 1.0 enclave endorsement validation mechanism.
 
 # Repositories and Deliverables
 
@@ -647,7 +647,7 @@ It is setup in a way which still also you to easily edit files on the host using
 The FPC team’s current practices include both unit and integration testing, using above docker environment to automate end-to-end tests. 
 CI/CD is enabled on Github via Travis.
 This includes also linter checks for both C and Go as well as checking for appropriate license headers.
-<!-- Comment out auction demo as intrinsically not FPC Lite enabled, will have to wait for Full FPC ..
+<!-- Comment out auction demo as intrinsically not FPC 1.0 enabled, will have to wait for Full FPC ..
 With the Auction Demo scenario, we also include a representative example which illustrates end-to-end how to design, build and deploy a secure FPC application across the complete lifecycle.  In addition, this demo serves as an additional comprehensive integration test for our CI/CD pipeline. 
 -->
 
