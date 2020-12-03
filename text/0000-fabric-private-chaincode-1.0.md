@@ -15,7 +15,9 @@ nav_order: 3
 # *Preamble*
 *This text is to put this PR into context with the old PR and hence has to be part of the description of the PR, not of the RFC itself, but for simplicity I include it now here, we just will have to move it to PR once we open the PR ...*
 
-This PR superceeds an earlier [PR#21](https://github.com/hyperledger/fabric-rfcs/pull/21). While PR#21 shares the same motivation of this PR, we realized that the proposed changes in PR21 were too intrusive and too complex for an initial realization of the concept of a (stronlgy) private chaincode. This PR remedies this by targeting first on a (interesting) subclass of use-cases which need that concept while vastely reducing complexity in the architecture, removing the need for any change in the core fabric code and still providing a clean roadmap to the bigger vision.  To differentiate between the two, we call the architecture presented here as *FPC 1.0*.
+This PR proposes the *FPC 1.0* architecture and supersedes the earlier [PR#21](https://github.com/hyperledger/fabric-rfcs/pull/21).
+PR#21 proposed intrusive and complex changes for an initial realization of the concept of a (stronlgy) private chaincode.
+FPC 1.0 takes a different approach as it avoids any change to the core Fabric code and provides a clean roadmap to expand the application domain.
 
 # Summary
 [summary]: #summary
@@ -213,9 +215,12 @@ So putting it before User Experience would put it a bit in wrong context ...
 Arguably, it might even be better to put it _after_ the architecture as there are essentially already some forward references to architecture features involved.
 -->
 
-- Organization do not have to trust any other organization (i.e., their users, admins and software such as peers) as far as confidentiality is concerned. That is, all of them could collude, modify any software (not only fabric but also operating systems, hypervisor) and still would not be able to extract private state from the chaincode or learn anything about the requests or responses of the victim organization (other than what the chaincode logic allows them to learn about it).
+- Organizations do not have to trust each other (i.e., users, admins and software such as peers of another organization) as far as confidentiality is concerned.
+An organization can modify any software (including any hypervisor, operating system, or Fabric itself).
+Yet, such an organization would not be able to extract private state from the chaincode,
+or learn anything about the requests or responses of the victim organization (other than what the chaincode logic allows them to learn about it).
 
-- Organizations do have to trust a quorum of other organizations as defined by the lifecycle and chaincode endorsement policies as far as integrity of chaincode metadata is concerned. E.g., they have to rely on quorums of admins to only create and modify chaincodes as appropriate and they have to rely on quorum of peers to properly execute validation chaincode transactions.
+- Organizations do have to trust a quorum of other organizations as defined by the lifecycle and chaincode endorsement policies as far as integrity of chaincode metadata is concerned. E.g., they have to rely on quorums of admins to only create and modify chaincodes as appropriate and they have to rely on quorum of peers to properly execute enclave registry and validation chaincode transactions.
 
 - We also assume that normally users trust the peers of their own organization, e.g., when retrieving chaincode encryption keys. (This is primarily for simplicity. As for any Fabric chaincode, users outside of organizations could implement queries without trust in a single organization/peer by repeating queries withe multiple peers/organizations until enough identical responses are received to satisfy the endorsement policy, similar to transaction validation at peers before applying them to the ledger.)
 
