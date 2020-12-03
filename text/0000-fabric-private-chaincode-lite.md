@@ -12,6 +12,11 @@ nav_order: 3
 
 <!-- @Angelo @Ale @Elli Please have a look at this version and comment inline or on github; whatever you prefer -->
 
+# *Preamble*
+*This text is to put this PR into context with the old PR and hence has to be part of the description of the PR, not of the RFC itself, but for simplicity I include it now here, we just will have to move it to PR once we open the PR ...*
+
+This PR superceeds an earlier [PR#21](https://github.com/hyperledger/fabric-rfcs/pull/21). While PR#21 shares the same motivation of this PR, we realized that the proposed changes in PR21 were too intrusive and too complex for an initial realization of the concept of a (stronlgy) private chaincode. This PR remedies this by targeting first on a (interesting) subclass of use-cases which need that concept while vastely reducing complexity in the architecture, removing the need for any change in the core fabric code and still providing a clean roadmap to the bigger vision.  To differentiate between the two, we call the architecture presented here as *FPC Lite*.
+
 # Summary
 [summary]: #summary
 
@@ -21,8 +26,8 @@ Most importantly, FPC protects transactional data while in use by the chaincode,
 Hence, differently from typical chaincode applications, curious Fabric peers can only handle encrypted data related to FPC Chaincodes.
 Ultimately, this mitigates the requirement for endorsing peers to be fully trusted for confidentiality.
 
-The design of FPC thus extends the existing model of privacy in Fabric, enabling the secure implementation of additional use cases.
-Some examples include private voting systems, high-stakes sealed-bid auctions, and confidential analytics.
+The design of FPC thus extends the existing model of privacy in Fabric, enabling the secure implementation of additional use cases. An example of a new use-case enabled by the first end-to-end secure realization of that framework, called *FPC Lite*, are privacy-preserving federated analytics over data owned by multiple mutually mistrusting organizations.
+
 FPC is available open-source on Github (https://github.com/hyperledger-labs/fabric-private-chaincode) as patch-free runtime extension of Hyperledger Fabric v2.2.
 
 **FPC in a nutshell.**
@@ -43,35 +48,22 @@ Such data includes secret cryptographic keys, which the chaincode uses to secure
     The distinction is done later in the architecture/design section
 -->
 
-***TODO*** document is missing a bit in the intro section about:
-- clear statement what is the purpose of the document
-- link to full FPC
-- explain that we begin with FPC lite on our journey to FULL FPC security features
-- differentiate between FPC Lite/Full Security properties and the feature to support vanilla Fabric- clarify
-- introduce MVP a bit earlier
-
 ## Enable new use-cases with strong privacy requirements
-FPC is motivated by the many use cases in which it is desirable to embody an application in a Blockchain architecture, but where in addition to the *existing integrity assurances*, the application *also requires privacy*. This may include private voting, sealed bid auctions, operations on sensitive data such as regulated medical or genomic data, and supply chain operations requiring contract secrecy. With Fabric's current privacy mechanisms, these use cases are not possible as they still require the endorsement nodes to be fully trusted.
+
+FPC is primarily motivated by the many use cases in which it is desirable to embody an application in a Blockchain architecture, but where in addition to the *existing integrity assurances*, the application *also requires privacy*. This may include privacy-preserving analytics on sensitive data such as regulated medical or genomic data, supply chain operations requiring contract secrecy, private voting or sealed bid auctions. With Fabric's current privacy mechanisms, these use cases are not possible as they still require the endorsement nodes to be fully trusted.
 For example, the concept of channels and Private Data allows to restrict chaincode data sharing only within a group of authorized participants, still when the chaincode processes the data it is exposed to the endorsing peer in clear. In the example of a voting system, where a government may run an endorsing peer it is clear that this is not ideal.
 
 ## Enable performance improvements
-<!-- Below section does not apply to FPC Lite but as we haven't introduced that and this motivation can be address in a later extensions we still mention it here -->
-A second motivation for FPC is its integrity model based on hardware-enabled remote cryptographic attestation; this model can provide similarly high confidence of integrity to the standard Fabric model of integrity through redundancy, but using less computation and communication. With TEE-based endorsement and remote attestation, a new set of endorsement policies are made possible, which can reduce the number of required endorsements and still provide sufficient assurance of integrity for many workloads.
-***TODO*** this contradicts our enclave endorsement validation point; make clear that the actual Chaincode Execution may be expensive;
 
-FPC adds another line of defense around a chaincode. Over time and with continued development of support for other languages and Trusted Execution Environments, we intend FPC to become the standard way to execute many or even most chaincodes in Fabric, similar to what HTTPS has become for the Web.
+A secondary motivation for FPC is its integrity model based on hardware-enabled remote cryptographic attestation; this model can provide similarly high confidence of integrity to the standard Fabric model of integrity through redundancy, but using less computation. With TEE-based endorsement and remote attestation, a new set of endorsement policies are made possible, which can reduce the number of required, and potentially expensive, chaincode executions and still provide sufficient assurance of integrity for many workloads. As usual for performance, there are trade-offs and only measurements can identify the optimal approach.
 
+## Sound and low impact foundation
 
-**(Note that FPC Lite makes the simplifying assumption that, for each deployed FPC Chaincode, a single enclave is initialized and registered.)**
+The architecture presented below is driven by two goals: 
+(1) minimize the requirements on Fabric core, specifically no code changes,
+(2) enable a clear roadmap beyond this first architecture to cover larger classes of use-cases, to provide a richer programming model and to gain additional performance benefits (besides computation also reduce communication costs over standard fabric) while providing a largely unchanged [User Experience](#user-experience).
 
-
-## Thread Model
-- clear discussion who are the bad actors
-- role of the peer with respect to the enclave
-- contradiction everywhere in the documents (eg. when we talk about fetching chaincode key from ERCC; it is not obvious that we mean a strong query by contacting enough peers)
-- difference between fullFPC and lite FPC
-- rollback protection; explain what this is an forward reference to rollback section
-
+Overall, FPC adds another line of defense around a chaincode. Over time and with continued development of support for other languages and Trusted Execution Environments, we intend FPC to become the standard way to execute many or even most chaincodes in Fabric, similar to what HTTPS has become for the Web.
 
 # User Experience
 [functional-view]: #functional-view
@@ -223,14 +215,20 @@ That is, there is also a public/private key pair and a symmetric state encryptio
 
 A detailed description (internal view) of the FPC deployment process is provided in the FPC Lite Architecture section below and can be found in the [Full Detail Diagrams](#full-detail-diagrams) section.
 
-## Requirements
 
-- FPC Chaincode must be written in C/C++ using our FPC SDK. More language support is planned.
-- FPC relies on the External Builder and Launcher feature of Fabric.
-  <!-- comment out below as we haven't introduced registry yet and, at least so far, we have put the registration under the cover of cli
-   FPC's attestation infrastructure requires the installation of an FPC Registry chaincode per channel.
-  -->
-- FPC requires that the Endorsing Peers run on an Intel&reg; x86 machine with the SGX feature enabled. We plan to add support for other Trusted Execution Environments in future releases.
+# Thread & Trust Model
+<!-- note: put thread-model here as threat-model is crucial to understand when looking at architecture and the application classes covered, all of this only covered here.  
+So putting it before User Experience would put it a bit in wrong context ...
+Arguably, it might even be better to put it _after_ the architecture as there are essentially already some forward references to architecture features involved.
+-->
+
+- Organization do not have to trust any other organization (i.e., their users, admins and software such as peers) as far as confidentiality is concerned. That is, all of them could collude, modify any software (not only fabric but also operating systems, hypervisor) and still would not be able to extract private state from the chaincode or learn anything about the requests or responses of the victim organization (other than what the chaincode logic allows them to learn about it).
+
+- Organizations do have to trust a quorum of other organizations as defined by the lifecycle and chaincode endorsement policies as far as integrity of chaincode metadata is concerned. E.g., they have to rely on quorums of admins to only create and modify chaincodes as apropriate and they have to rely on quorum of peers to properly execute validation chaincode transactions.
+
+- We also assume that users trust the peers of their own organization, e.g., when retrieving chaincode encryption keys. (This is primarily for simplicity. As for any Fabric chaincode, users outside of organizations could implement queries without trust in a single organization/peer by repeating queries withe multiple peers/organizations until enough identical responses are received to satisfy the endorsement policy, similar to transaction validation at peers before applying them to the ledger.)
+
+- We do assume that a code running inside a TEE cannot be tampered with or its memory inspected. Similarly, we also require that remote attestation provided by a TEE are authentic and prove that only the code referenced in the attestation could have issued it.
 
 
 # FPC Lite Architecture
@@ -244,9 +242,12 @@ A detailed description (internal view) of the FPC deployment process is provided
 In the previous sections we have introduced Fabric Private Chaincode and explained how it works from the end-user perspective.
 This section describes the FPC Architecture (internal view).
 The first realization of FPC is called *FPC Lite*.
-The framework enables a class of applications which do not require release of sensitive data conditioned on private ledger state.
-This class includes smart contracts which operate on sensitive medical data, or enforce confidential supply chain agreements.
-The [Rollback Protection Extension](#rollback-protection-extension) to FPC Lite can enable support of an even larger class of applications.
+This realization enables a class of applications which require (chaincode-)private ledger state and private transaction requests and responses but do not require release of sensitive data conditioned on private ledger state. 
+This class includes smart contracts which operate on sensitive medical data, or enforce confidential supply chain agreements. 
+The former is illustrated in more details below.
+More detailed information on the constraints and related programming model restrictions plus a corresponding security analysis can be found in a [separate document](https://docs.google.com/document/d/1jbiOY6Eq7OLpM_s3nb-4X4AJXROgfRHOrNLQDLxVnsc/).
+
+The [Rollback Protection Extension](#rollback-protection-extension) to FPC Lite can enable support of an even larger class of applications such as private sealed-bid auctions or secure voting which do have intrinsic requirements of release of sensitive data conditioned on private state, e.g., a sealed bid auction outcome should be private until the auction closure is commited on the ledger.
 
 
 ### Use case: Privacy-enhanced Federated Learning on FPC Lite
@@ -254,7 +255,7 @@ The [Rollback Protection Extension](#rollback-protection-extension) to FPC Lite 
 ***TODO: @Jeb can you please make pass on below and replace this section as appropriate with info from HBP, UMBC or alike***
 For example, Federated Learning on private sensitive information is a real-world use-case which FPC Lite enables securely on Hyperledger Fabric.
 To illustrate this, consider the case of training a model, e.g, Convolutional Neural Network (CNN), for detecting brain abnormalities such as precancerous lesions or aneurysms.
-To achieve high accuracy we need considerably more data than single entities (e.g., a hospital) usually has.
+To achieve high accuracy we need considerably more data than any single entity (e.g., a hospital) usually possess.
 Yet regulations like HIPAA make sharing brain CT scans or MRI studies, labeled by radiologists, hard if not impossible. Furthermore, to allow widest use of a derived model, it should be freely shareable without any privacy concerns. Lastly, to provide the necessary accountability and audit trail, such a federated application is ideally tied to a ledger. While there are cryptographic solutions to perform federated learning in a strongly private manner, e.g., based on differential privacy, for such a setting, they are very expensive in terms of computation and, in particular, communication complexity.
 
 A sketch on how this could be solved as follows:
@@ -485,9 +486,18 @@ We plan to explore other TEE platforms such as AMD SEV in the future.
 FPC Lite does ***not*** require any changes/modifications to Fabric (Peer).
 We recommend reading the chaincode development and deployment sections to know more about the private chaincode coding language and the use of Fabric's external builder and launcher capabilities.
 
+## Requirements
+
+- FPC Chaincode must be written in C/C++ using our FPC SDK. More language support is planned.
+- FPC relies on the External Builder and Launcher feature of Fabric.
+  <!-- comment out below as we haven't introduced registry yet and, at least so far, we have put the registration under the cover of cli
+   FPC's attestation infrastructure requires the installation of an FPC Registry chaincode per channel.
+  -->
+- FPC requires that the Endorsing Peers run on an Intel&reg; x86 machine with the SGX feature enabled. We plan to add support for other Trusted Execution Environments in future releases.
+
 ## Fabric Features Not (Yet) Supported
 
-In order to focus the development resources on the core components of FPC, the MVP of FPC Lite excludes certain Fabric features, which will be added in the future.
+In order to focus the development resources on the core components of FPC, the FPC Lite initially excludes certain Fabric features, which will be added in the future.
 
 - Multiple implementations for a single chaincode.
 This feature is supported in Fabric v2 and gives organizations the freedom to implement and package their own chaincode.
@@ -505,6 +515,7 @@ It allows for different chaincode implementations as long as changes to the ledg
 - Chaincode-to-chaincode invocations (cc2cc)
 - Private Collections
 - Complex (CouchDB) queries like range queries
+- Endorsemen and validation plugins as well as decorators
 
 ## Rollback-Protection Extension
 
@@ -533,6 +544,7 @@ The full detailed protocol specification of FPC Lite is documented in a series o
 - The [fpc-cc-execution](../images/fpc/full-detail/fpc-cc-execution.png) diagram provides further detail of the execution phase of an FPC Chaincode, focusing in particular on the `getState` and `putState` interactions with the Ledger and verification of state with the Ledger Enclave.
 - The [fpc-validation](../images/fpc/full-detail/fpc-validation.png) diagram describes the FPC-specific process of validation and establishing a trusted view of the ledger using the Ledger Enclave.
 - The [fpc-components](../images/fpc/full-detail/fpc-components.png) diagram shows the important data structures of FPC components and messages exchanged between components.
+- The detailed message definitions can be find as [protobufs](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/protos/fpc)
 - The [interfaces](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/docs/design/fabric-v2%2B/interfaces.md) document defines the interfaces exposed by the FPC components and their internal state.
 
 Note: The source of the UML Sequence Diagrams are also available on the [FPC Github repository](https://github.com/hyperledger-labs/fabric-private-chaincode/tree/master/docs/design/fabric-v2%2B).
@@ -557,6 +569,8 @@ This will include the core infrastructure for FPC including the C/C++ Chaincode 
 -->
 
 # Feature Roadmap
+
+- Support for multiple enclaves and correspondingly richer endorsement policies, performance improvements and fairness/progress guarantees.
 
 - Design and implementation of the [Rollback-Protection Extension](#rollback-protection-extension).
 
@@ -642,14 +656,40 @@ The project team currently participates in the new Confidential Computing Consor
 # Appendix
 [appendix]: #appendix
 
-## Encryption
+## Cryptography
 
-***TODO***
- - write an appendix explaining what is data is encrypted, what cryto is used; which keys are shared; 
- - details on key size / encryption
+Below we summarize the different cryptographic mechanims used (beyond what Fabric already does), the corresponding algorithm, key sizes and usages
 
-describe keys and messages; what is attested
+- cryptographic digests
+  - algorithm:
+    - SHA-256
+  - usage:
+    - signatures,
+      attestation,
+      summarization of read and write set and
+      derivation of fixed-size identifier of PK
+- symmetric encryption
+  - algorithm: 
+    - aes-gcm 128
+  - usage and key-lifetime: 
+    - encryption of response to client requests (key generation by client, one key per request)
+    - encryption of values in ledger's K/V store (key generation inside enclave, one per chaincode
+      <!-- and shared only among all _registered_ enclaves of the same chaincode -->
+      ),
+    - sealing of enclave state (key derived from SGX fuse keys via `EGETKEY` instruction, one key per <chaincode, platform> combination)
+- public key encryption
+  - algorithm:
+    - RSA-OAEP 3072
+  - usage and key-lifetime:
+    <!-- - key distribution (ene enclave encryption key per <chaincode, platform> combination, key generation inside enclave) -->
+    - encryption of client requests (key generation of chaincode encryption key inside enclave, one per chaincode)
+- public key signatures
+  - algorithm:
+    - ECDSA secp256k1
+  - usage and key-lifetime:
+    - signing of
+      registration messages,
+      <!-- key distribution messages -->
+      and enclave endorsement (one enclave signature keys per <chaincode, platform> combination, key generation inside enclave)
 
-Keys:
-
-Credentials < PK, bla bla>
+Details on the encrypted, signed or hashed messages can be found in our [protobuf definitions](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/protos/fpc), primarily in [fpc.proto](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/protos/fpc/fpc.proto).
