@@ -246,21 +246,31 @@ More detailed information on the constraints and related programming model restr
 
 ### Use case: Privacy-enhanced Federated Learning on FPC Lite
 
-Ideal use cases for FPC Lite involve operations on private data that do not involve the conditional revelation of those data. For example, Federated Learning on private sensitive information is a real-world use-case which FPC Lite enables securely on Hyperledger Fabric.
+Ideal use cases for FPC 1.0 involve operations on private data that do not involve the conditional revelation of those data.
+For example, Federated Learning on private sensitive information is a real-world use-case which FPC 1.0 enables securely on Hyperledger Fabric.
 In this use case, a decentralized group of organizations each possess private information – for example, hospitals possessing brain CT and MRI scans labeled by radiologists to indicate the presence of precancerous lesions.
 Regulations like HIPAA and GDPR make it difficult if not impossible to share these data; however, all can benefit from an AI model trained using all of their collective data.
 
-Federated Learning, as described in this original article: https://ai.googleblog.com/2017/04/federated-learning-collaborative.html, is a class of decentralized algorithms in which training is performed simultaneously across multiple nodes without the need to share training data.
+Federated Learning is a class of decentralized algorithms in which training is performed simultaneously across multiple nodes without the need to share training data.
 It provides some inherent privacy even without Trusted Execution, but with Trusted Execution is far more robust against various attacks in case one of the participants is compromised by an attacker or malicious insider.
-Specifically, FPC’s Trusted Execution Environment can assure that only vetted and unmodified training programs can participate in the algorithm, and that it includes mechanisms to foil possible attacks such as Adversarial Machine Learning.
+Specifically, FPC 1.0’s Trusted Execution Environment can assure that only vetted and unmodified training programs can participate in the algorithm, and that it includes mechanisms to foil possible attacks such as Adversarial Machine Learning.
 It can also keep a hardware-signed record of model and training data provenance that can be used to audit the system in case bad data is introduced.
 Through each training job, a model is produced which does not incorporate any of the training data from which it was created; the model is published to the group without any revelation of the private training data.
 
-Many similar use cases are ideal for FPC Lite; for example:
+An example Federated Learning system is described here: [Federated Learning: Collaborative Machine Learning without Centralized Training Data](https://ai.googleblog.com/2017/04/federated-learning-collaborative.html).
+A second example with more rigorous security properties is described here: [PATE, for Private Aggregation of Teacher Ensembles](https://openreview.net/forum?id=HkwoSDPgg&noteId=HkwoSDPgg).
 
-- Fraud detection analytics between financial institutions that don’t want to share details of financial transactions.
-- Cyber Security analytics between companies that don’t want to share details of attacks.
-- Statistical analyses and AI on structured tabular medical or financial record data that cannot be shared between organizations.
+Many similar use cases are ideal for FPC 1.0; for example:
+-	Fraud detection analytics between financial institutions that don’t want to share details of financial transactions
+-	Cyber Security analytics between companies that don’t want to share details of attacks
+-	Statistical analyses and AI on structured tabular medical or financial record data that cannot be shared between organizations
+
+Conversely, use cases that are not ideally suited to FPC 1.0 involve revelation of private data conditional on the ledger state.
+For example, auctions or voting systems in which the bids/votes are kept private until some event such as the closure of a round.
+Such use cases may be subject to rollback attacks that may reveal private data in case of a compromised Peer.
+These use cases should be avoided in FPC 1.0 but will be addressed in a future release of FPC.
+For a detailed discussion, please see [the google documents in the references](#references).
+
 
 <!--
     - Auctions, markets and voting systems without sealed bids/votes – for example, a continuous Auction Market (or Double Auction) in which a private smart contract is required to authenticate anonymous buy/sell bids but which then immediately publishes time-stamped bids to the blockchain. In this case, bidder identity is the private information that is never shared, and the bids or votes are not private. -->
@@ -538,7 +548,7 @@ In particular, the FPC framework can provide chaincodes with a verifiable proof 
 The design documents referenced in [Design Documents](#design-documents) already outline the path to realize such architecture extension.
 We refer to this as the Full FPC specification.
 
-## References to Design Documents
+## References
 
 The full detailed protocol specification of FPC Lite is documented in a series of UML Sequence Diagrams. Note that in addition to the FPC Lite specification, we already provide a proposal to extend FPC Lite to the Full FPC specification that addresses the limitations addressed in the previous section.
 
