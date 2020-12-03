@@ -207,8 +207,8 @@ That is, there is also a public/private key pair and a symmetric state encryptio
 A detailed description (internal view) of the FPC deployment process is provided in the FPC Lite Architecture section below and can be found in the [Full Detail Diagrams](#full-detail-diagrams) section.
 
 
-# Thread & Trust Model
-<!-- note: put thread-model here as threat-model is crucial to understand when looking at architecture and the application classes covered, all of this only covered here.  
+# Threat & Trust Model
+<!-- note: put threat-model here as threat-model is crucial to understand when looking at architecture and the application classes covered, all of this only covered here.  
 So putting it before User Experience would put it a bit in wrong context ...
 Arguably, it might even be better to put it _after_ the architecture as there are essentially already some forward references to architecture features involved.
 -->
@@ -222,7 +222,7 @@ Arguably, it might even be better to put it _after_ the architecture as there ar
 - We do assume that a code running inside a TEE cannot be tampered with or its memory inspected. Similarly, we also require that remote attestation provided by a TEE are authentic and prove that only the code referenced in the attestation could have issued it.
 Therefore, all participants/organizations trust a TEE (in particular, the FPC Chaincode Enclave), which can provide such an attestation, regardless of at which peer/organization the TEE is hosted.
 
-- The TEE (FPC Chaincode Enclave) does not trust the hosting peer. That is, all data received via transaction invocations (e.g., the transaction proposal) or via state access operations (e.g., `get_state`) are considered untrusted.
+- However, given above-mentioned trust assumptions on peers, a TEE (FPC Chaincode Enclave) cannot trust the hosting peer. Hence all data received via transaction invocations (e.g., the transaction proposal) or via state access operations (e.g., `get_state`) must be considered untrusted.
 
 
 # FPC Lite Architecture
