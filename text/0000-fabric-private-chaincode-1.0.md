@@ -17,7 +17,7 @@ nav_order: 3
 
 This PR proposes the *FPC 1.0* architecture and supersedes the earlier [PR#21](https://github.com/hyperledger/fabric-rfcs/pull/21).
 PR#21 proposed intrusive and complex changes for an initial realization of the concept of a (stronlgy) private chaincode.
-FPC 1.0 takes a different approach as it avoids any change to the core Fabric code and provides a clean roadmap to expand the application domain.
+FPC 1.0 takes a different approach as it covers a smaller application domain but thereby avoids any change to the core Fabric code. How to broaden to the application domain covered in PR#21 is outlined in a roadmap of future work.
 
 # Summary
 [summary]: #summary
@@ -215,7 +215,7 @@ So putting it before User Experience would put it a bit in wrong context ...
 Arguably, it might even be better to put it _after_ the architecture as there are essentially already some forward references to architecture features involved.
 -->
 
-- Organizations do not have to trust each other (i.e., users, admins and software such as peers of another organization) as far as confidentiality is concerned.
+- Organizations do not have to trust each other (i.e., users, admins and software such as peers of another organization or arbitrary collusions thereof) as far as confidentiality is concerned.
 An organization can modify any software (including any hypervisor, operating system, or Fabric itself).
 Yet, such an organization would not be able to extract private state from the chaincode,
 or learn anything about the requests or responses of the victim organization (other than what the chaincode logic allows them to learn about it).
@@ -225,9 +225,8 @@ or learn anything about the requests or responses of the victim organization (ot
 - We also assume that normally users trust the peers of their own organization, e.g., when retrieving chaincode encryption keys. (This is primarily for simplicity. As for any Fabric chaincode, users outside of organizations could implement queries without trust in a single organization/peer by repeating queries withe multiple peers/organizations until enough identical responses are received to satisfy the endorsement policy, similar to transaction validation at peers before applying them to the ledger.)
 
 - We do assume that a code running inside a TEE cannot be tampered with or its memory inspected. Similarly, we also require that remote attestation provided by a TEE are authentic and prove that only the code referenced in the attestation could have issued it.
-Therefore, all participants/organizations trust a TEE (in particular, the FPC Chaincode Enclave), which can provide such an attestation, regardless of at which peer/organization the TEE is hosted.
-
-- However, given above-mentioned trust assumptions on peers, a TEE (FPC Chaincode Enclave) cannot trust the hosting peer. Hence all data received via transaction invocations (e.g., the transaction proposal) or via state access operations (e.g., `get_state`) must be considered untrusted.
+  Therefore, all participants/organizations trust a TEE (in particular, the FPC Chaincode Enclave), which can provide such an attestation, regardless of at which peer/organization the TEE is hosted.
+  However, given above-mentioned trust assumptions on peers, a TEE (FPC Chaincode Enclave) cannot trust the hosting peer. Hence all data received via transaction invocations (e.g., the transaction proposal) or via state access operations (e.g., `get_state`) must be considered untrusted.
 
 
 # FPC 1.0 Architecture
@@ -682,6 +681,39 @@ The project team currently participates in the new Confidential Computing Consor
 
 Below we summarize the different cryptographic mechanims used (beyond what Fabric already does), the corresponding algorithm, key sizes and usages.
 
+- Public key signatures:
+  - Algorithm: ECDSA secp256k1
+  - Usage and key-lifetime:
+    - `enclave_sk`/`enclave_vk` - Enclave signing and verification key pair,
+      used for authentication of FPC Chaincode endorsements and ERCC registration
+      <!-- & key distribution messages -->
+      messages.
+      There is one key pair per <chaincode, platform> combination.
+      The private key is generated and kept inside the FPC Chaincode Enclave.
+      The public key is made available to all participants through the Enclave Registry.
+      A hash of it also serves as enclave identifier.
+- Public key encryption:
+  - Algorithm: RSA-OAEP 3072
+  - Usage and key-lifetime:
+    <!-- - `enclave_ek`/`enclave_dk` - Enclave encryption key pair, used for key distribution among enclaves.
+      The private key is generated and kept inside the FPC Chaincode Enclave.
+      There is one key pair per <chaincode, platform> combination.
+      The public key is made available through the Enclave Registry. -->
+    - `chaincode_ek`/ `chaincode_dk` - Chaincode encryption & decryption key pair,
+      used to protect transaction arguments sent from client to the chaincode.
+      There is one key pair per chaincode.
+      The private key is generated and kept inside the FPC Chaincode Enclave
+      <!--, shared only among all _registered_ enclaves of the same chaincode-->.
+      The public key is made available to all participants through the Enclave Registry.
+- Symmetric encryption:
+  - Algorithm: AES-GCM 128
+  - Usage and key-lifetime: 
+    - `sek` - State encryption key, used to encrypt/decrypt and authenticate the contents of chaincode state stored on the ledger. 
+       This key is generated and kept inside the FPC Chaincode Enclave.
+       There is one per chaincode
+      <!--, shared only among all _registered_ enclaves of the same chaincode-->.
+    - `essk` -- Enclave state key, used to encrypt/decrypt and authenticate the enclave state such as enclave and chaincode secrets. This key is derived from SGX fuse keys via `EGETKEY` instruction. There is one key per <chaincode, platform> combination.
+    - `return_encryption_key` - Chaincode Response Encryption Key, generated and sent -- encrypted with `chaincode_ek` as part of the encrypted request -- by the client to the FPC Chaincode Enclave for response encryption. A fresh key is used for every invocation.
 - Cryptographic digests:
   - Algorithm: SHA-256
   - Usage:
@@ -689,34 +721,5 @@ Below we summarize the different cryptographic mechanims used (beyond what Fabri
       attestation,
       summarization of read and write set and
       derivation of fixed-size identifier of PK
-- Symmetric encryption:
-  - Algorithm: AES-GCM 128
-  - Usage and key-lifetime: 
-    - Encryption of response to client requests (key generation by client, one key per request)
-    - Encryption of values in ledger's K/V store (key generation inside enclave, one per chaincode
-      <!-- and shared only among all _registered_ enclaves of the same chaincode -->
-      ),
-    - Sealing of enclave state (key derived from SGX fuse keys via `EGETKEY` instruction, one key per <chaincode, platform> combination)
-- Public key encryption:
-  - Algorithm: RSA-OAEP 3072
-  - Usage and key-lifetime:
-    <!-- - key distribution (ene enclave encryption key per <chaincode, platform> combination, key generation inside enclave) -->
-    - Encryption of client requests (key generation of chaincode encryption key inside enclave, one per chaincode)
-- Public key signatures:
-  - Algorithm: ECDSA secp256k1
-  - Usage and key-lifetime:
-    - Signing of
-      registration messages,
-      <!-- key distribution messages -->
-      and enclave endorsement (one enclave signature keys per <chaincode, platform> combination, key generation inside enclave)
-
-Next we summarize the key material used by the FPC components in addition to standard Fabric key material.
-
-- `enclave_sk` - Enclave signature key, used for FPC Chaincode endorsements. This key is kept inside the FPC Chaincode Enclave.
-- `enclave_vk` - Enclave signature verification key, used for FPC Chaincode endorsement validation and as enclave identifier. This key is made available through the Enclave Registry among all participants.
-- `chaincode_ek` - Chaincode encryption key, used to encrypt transaction arguments. This key is made available through the Enclave Registry among all participants.
-- `chaincode_dk` - Chaincode decryption key, used to decrypt transaction arguments. This key is kept inside the FPC Chaincode Enclave.
-- `sek` - State encryption (symmetric) key, used to encrypt/decrypt and authenticate the contents of chaincode state stored on the ledger. This key is kept inside the FPC Chaincode Enclave.
-- `return_encryption_key` - Chaincode Response Encryption Key, generated and sent by the client to the FPC Chaincode Enclave for response encryption. A fresh key for every invocation is used.
 
 Details on the encrypted, signed or hashed messages can be found in our [protobuf definitions](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/protos/fpc), primarily in [fpc.proto](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/protos/fpc/fpc.proto).
