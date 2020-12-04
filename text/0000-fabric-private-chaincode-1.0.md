@@ -555,7 +555,7 @@ We refer to this as the Full FPC specification.
 
 ## References
 
-The full detailed protocol specification of FPC 1.0 is documented in a series of UML Sequence Diagrams. Note that in addition to the FPC 1.0 specification, we already provide a proposal to extend FPC 1.0 to the Full FPC specification that addresses the limitations addressed in the previous section.
+The full detailed protocol specification of FPC 1.0 is documented in a series of UML Sequence Diagrams. Note that in addition to the FPC 1.0 specification (referenced in below documents as *FPC Lite*), we already provide a proposal to extend FPC 1.0 to the Full FPC specification that addresses the limitations addressed in the previous section.
 
 - The [fpc-lifecycle-v2](../images/fpc/full-detail/fpc-lifecycle-v2.png) diagram describes the lifecycle of a FPC Chaincode, focusing in particular on those elements that change in FPC vs. regular Fabric.
 - The [fpc-registration](../images/fpc/full-detail/fpc-registration.png) diagram describes how an FPC Chaincode Enclave is created on a Peer and registered at the FPC Registry, including the Remote Attestation process.
@@ -570,8 +570,10 @@ The full detailed protocol specification of FPC 1.0 is documented in a series of
 Note: The source of the UML Sequence Diagrams are also available on the [FPC Github repository](https://github.com/hyperledger-labs/fabric-private-chaincode/tree/master/docs/design/fabric-v2%2B).
 
 Additional google documents provide details on FPC 1.0:
-- The [FPC 1.0 for Health use case](https://docs.google.com/document/d/1jbiOY6Eq7OLpM_s3nb-4X4AJXROgfRHOrNLQDLxVnsc/) describes how FPC 1.0 enables a health care use case, without requiring a trusted ledger.
-- The [FPC 1.0 externalized endorsement validation](https://docs.google.com/document/d/1RSrOfI9nh3d_DxT5CydvCg9lVNsZ9a30XcgC07in1BY/) describes the FPC 1.0 enclave endorsement validation mechanism.
+
+- The [FPC for Health use case](https://docs.google.com/document/d/1jbiOY6Eq7OLpM_s3nb-4X4AJXROgfRHOrNLQDLxVnsc/) describes how FPC 1.0 enables a health care use case.
+  The document also gives more details on the FPC 1.0-enabled application domains and related constraints. Lastly, it provides a security analysis why these constraints are sufficient for security.
+- The [FPC externalized endorsement validation](https://docs.google.com/document/d/1RSrOfI9nh3d_DxT5CydvCg9lVNsZ9a30XcgC07in1BY/) describes the FPC 1.0 enclave endorsement validation mechanism.
 
 # Repositories and Deliverables
 
