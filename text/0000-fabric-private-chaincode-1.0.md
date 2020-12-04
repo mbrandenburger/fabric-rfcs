@@ -229,60 +229,64 @@ or learn anything about the requests or responses of the victim organization (ot
   However, given above-mentioned trust assumptions on peers, a TEE (FPC Chaincode Enclave) cannot trust the hosting peer. Hence all data received via transaction invocations (e.g., the transaction proposal) or via state access operations (e.g., `get_state`) must be considered untrusted.
 
 
-# FPC 1.0 Architecture
-[architecture]: #architecture
+# FPC 1.0 Application Domain
+[app-domain]: #app-domain
 <!-- 
-    Description of section: This section makes the FPC vs FPC 1.0 distinction (& related restrictions)
-    and then provides an outline of the architecture of FPC 1.0.
-    Note: we should use here preferably the term FPC 1.0 rather than FPC.
+    Description of section: This section makes the FPC vs FPC 1.0 distinction (& related restrictions),
+    i.e., Ale's lithums test,
+    and then provides a concrete use-case and how FPC would solve it.
 -->
+## Characterization
 
-In the previous sections we have introduced Fabric Private Chaincode and explained how it works from the end-user perspective.
-This section describes the FPC Architecture (internal view).
-The first realization of FPC is called *FPC 1.0*.
-This realization enables a class of applications which require (chaincode-)private ledger state and private transaction requests and responses but do not require release of sensitive data conditioned on private ledger state. 
-This class includes smart contracts which operate on sensitive medical data, or enforce confidential supply chain agreements. 
-The former is illustrated in more details below.
-More detailed information on the constraints and related programming model restrictions plus a corresponding security analysis can be found in a [separate document](https://docs.google.com/document/d/1jbiOY6Eq7OLpM_s3nb-4X4AJXROgfRHOrNLQDLxVnsc/).
+FPC 1.0 enables a class of applications which require (chaincode-)private ledger state and private transaction requests and responses but do *not require release of sensitive data conditioned on private ledger state*.
+This class includes smart contracts which perform privacy preserving analytics, e.g:
 
-<!-- The [Rollback Protection Extension](#rollback-protection-extension) to FPC 1.0 can enable support of an even larger class of applications such as private sealed-bid auctions or secure voting which do have intrinsic requirements of release of sensitive data conditioned on private state, e.g., a sealed bid auction outcome should be private until the auction closure is committed on the ledger. -->
-
-
-### Use case: Privacy-enhanced Federated Learning on FPC 1.0
-
-Ideal use cases for FPC 1.0 involve operations on private data that do not involve the conditional revelation of those data.
-For example, Federated Learning on private sensitive information is a real-world use-case which FPC 1.0 enables securely on Hyperledger Fabric.
-In this use case, a decentralized group of organizations each possess private information – for example, hospitals possessing brain CT and MRI scans labeled by radiologists to indicate the presence of precancerous lesions.
-Regulations like HIPAA and GDPR make it difficult if not impossible to share these data; however, all can benefit from an AI model trained using all of their collective data.
-
-Federated Learning is a class of decentralized algorithms in which training is performed simultaneously across multiple nodes without the need to share training data.
-It provides some inherent privacy even without Trusted Execution, but with Trusted Execution is far more robust against various attacks in case one of the participants is compromised by an attacker or malicious insider.
-Specifically, FPC 1.0’s Trusted Execution Environment can assure that only vetted and unmodified training programs can participate in the algorithm, and that it includes mechanisms to foil possible attacks such as Adversarial Machine Learning.
-It can also keep a hardware-signed record of model and training data provenance that can be used to audit the system in case bad data is introduced.
-Through each training job, a model is produced which does not incorporate any of the training data from which it was created; the model is published to the group without any revelation of the private training data.
-
-An example Federated Learning system is described here: [Federated Learning: Collaborative Machine Learning without Centralized Training Data](https://ai.googleblog.com/2017/04/federated-learning-collaborative.html).
-A second example with more rigorous security properties is described here: [PATE, for Private Aggregation of Teacher Ensembles](https://openreview.net/forum?id=HkwoSDPgg&noteId=HkwoSDPgg).
-
-Many similar use cases are ideal for FPC 1.0; for example:
 -	Fraud detection analytics between financial institutions that don’t want to share details of financial transactions
 -	Cyber Security analytics between companies that don’t want to share details of attacks
 -	Statistical analyses and AI on structured tabular medical or financial record data that cannot be shared between organizations
 
-Conversely, use cases that are not ideally suited to FPC 1.0 involve revelation of private data conditional on the ledger state.
-For example, auctions or voting systems in which the bids/votes are kept private until some event such as the closure of a round.
-Such use cases may be subject to rollback attacks that may reveal private data in case of a compromised Peer.
-These use cases should be avoided in FPC 1.0 but will be addressed in a future release of FPC.
-For a detailed discussion, please see [the google documents in the references](#references).
+It also covers smart contracts to enforce confidential supply chain agreements.
 
+Conversely, this class does not naturally cover use-case such as private sealed-bid auctions or secure voting.
+These do have intrinsic requirements of release of sensitive data conditioned on private state.
+For example, a sealed bid auction outcome should be private until the auction closure is committed on the ledger.
+(Note, though, that as described in the [Rollback Protection Extension](#rollback-protection-extension) to FPC 1.0 and the road map, future releases will broadens support to this larger class of applications.)
 
-<!--
-    - Auctions, markets and voting systems without sealed bids/votes – for example, a continuous Auction Market (or Double Auction) in which a private smart contract is required to authenticate anonymous buy/sell bids but which then immediately publishes time-stamped bids to the blockchain. In this case, bidder identity is the private information that is never shared, and the bids or votes are not private. -->
+More detailed information on the constraints and related programming model restrictions plus a corresponding security analysis can be found in a [separate document](https://docs.google.com/document/d/1jbiOY6Eq7OLpM_s3nb-4X4AJXROgfRHOrNLQDLxVnsc/).
 
-Conversely, use cases that are not ideally suited to our first realization of FPC involve revelation of private data conditional on the ledger state.
-For example, auctions or voting systems in which the bids/votes are kept private until some event such as the closure of a round.
-Such use cases may be subject to rollback attacks that may reveal private data in case of a compromised Peer. 
-These use cases should be avoided in FPC 1.0 but will be addressed in a future release of FPC, as described in the [Rollback Protection Extension](#rollback-protection-extension) for FPC 1.0 and our Roadmap.
+To further illustrate why and how FPC 1.0 enables interesting use-case, we describe below a concrete real-world use case and outline a possible solution based on FPC 1.0.
+
+## Example use case: Learn models to detect brain abnormalities
+
+Machine learning techniques have wide-spread applications in the medical domain.
+For example, consider the case of training a model, e.g, as a Convolutional Neural Network (CNN), for detecting brain abnormalities such as precancerous lesions or aneurysms.
+To achieve the necessary high accuracy, we need training data of considerably larger size and of more diversity than any single entity (e.g., a hospital) usually possesses.
+Hence, it is highly desirable to pool clinical data from as many entities as possible.
+However, regulations like HIPAA make sharing brain CT scans or MRI studies, labeled by radiologists, hard if not impossible. Furthermore, to allow widest use of a derived model, it should be freely shareable without any privacy concerns, i.e, we cannot rely only on organizational trust. Lastly, to provide the necessary accountability and audit trail, such a federated application is ideally tied to a ledger.
+
+There is a class of decentralized algorithms, called *Federated Learning*, in which training is performed simultaneously across multiple nodes without the need to share training data.
+However, the cryptographic algorithms which perform federated learning without any trusted entity while still providing the necessary accountability and strong privacy, e.g., based on differential privacy, are very expensive in terms of computation and, in particular, communication complexity.
+Furthermore, there is only limited tooling to facilitate building solutions based on these algorithms.
+
+A sketch of an possible solution with FPC 1.0 for above problem would be as follows:
+
+- The overall approach would be to follow the [“PATE, for Private Aggregation of Teacher Ensembles”](https://blog.acolyer.org/2017/05/09/semi-supervised-knowledge-transfer-for-deep-learning-from-private-training-data/) approach.
+  This approach provides the necessary strong privacy guarantees, i.e., differential privacy, to allow use to release the learned model to the public without any remaining privacy concerns.
+- However, this approach assumes that the learning of the privacy-preserving model is performed by a trusted entity.
+  This is where FPC 1.0 comes in: It is perfectly matched to perform this role, ensuring the integrity of the computation as well as the confidentiality of the training data related information exchanged during training.
+- More specifically, the participating hospitals would compute separate teacher models locally on their own data and send the resulting model encrypted and signed to the chaincode.
+  The chaincode would authenticate and validate the teacher models based on parameters apriori agreed and built into the chaincode, accumulate and record the submission in the ledger and, once sufficient inputs are received, will perform privately inside the chaincode the final student model computation.
+  Lastly, it will publish the resulting model, e.g., via put_public_state,on the ledger.
+- Additionally, FPC 1.0 could be used to further strengthen the security by requiring also that the teacher-model computation at the hospitals are run as FPC chaincode, ensuring that only vetted and unmodified training programs can participate in the algorithm, and allowing also the inclusion of mechanisms to foil possible Adversarial Machine Learning attacks.
+
+This solution allows to build an efficient solution and doing so in a natural way, based on a rich and familiar development environment.
+Importantly, also note that above approach would not release any sensitive data conditioned on private state and hence meets our criteria for FPC 1.0 outlined [above](#characterization).
+
+# FPC 1.0 Architecture
+[architecture]: #architecture
+<!-- 
+    Description of section: This section provides an outline of the architecture of FPC 1.0.
+-->
 
 ## Overview of Architecture
 
