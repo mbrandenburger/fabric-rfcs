@@ -226,8 +226,9 @@ Hence all data received via transaction invocations (e.g., the transaction propo
 - We additionally require that remote attestations provided by a TEE are authentic and prove that only the code referenced in the attestation could have issued it.
 Therefore, all participants/organizations trust a TEE (in particular, the FPC Chaincode Enclave), which can provide such an attestation, regardless of at which peer/organization the TEE is hosted.
 Such trust extends also to enclave signatures issued from attested cryptographic keys.
-It is due to such trust that FPC *implicitly* defines an enclave endorsement policy,
+It is due to such trust that FPC *implicitly* defines an enclave endorsement policy (see also the [FPC Management API](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/docs/design/fabric-v2%2B/fpc-management.md) document),
 according to which a single enclave signature (enclave endorsement) is sufficient to [validate](#enclave-endorsement-validation) an FPC transaction successfully.
+For clarity, the (FPC) enclave endorsement policy is different than the (Fabric) validation endorsement policy, the latter of which should be [determined](#enclave-endorsement-validation) from the organizational trust relationships in the Fabric network.
 
 
 # FPC 1.0 Application Domain
@@ -395,7 +396,7 @@ The operation is performed by executing the `initEnclave` admin command (see Ste
 
 FPC implements this command as a regular chaincode method, and uses Fabric's `peer chaincode` command to call it.
 Hence, its implementation does not modify, nor requires any modifications, to the Fabric framework.
-Also, conveniently, the command can be triggered through the FPC Client SDK (see [earlier Deployment Section](#deployment)), which is in turn built on the Fabric Client SDK for Go.
+Also, conveniently, the command can be triggered through the FPC Client SDK (see [Deployment](#deployment) section and [FPC Management API](https://github.com/hyperledger-labs/fabric-private-chaincode/blob/master/docs/design/fabric-v2%2B/fpc-management.md) document) which is in turn built on the Fabric Client SDK for Go.
 
 A successful initialization and registration will result in a new entry in the enclave registry namespace on the ledger. In particular, each entry contains enclave credentials, which cryptographically bind the enclave to the chaincode as defined in the chaincode definition.
 
