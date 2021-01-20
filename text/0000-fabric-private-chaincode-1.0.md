@@ -344,7 +344,7 @@ FPC uses a two-step execution process where first the FPC chaincode executes, an
 The Enclave Endorsement Validation component implements the second step of an FPC chaincode invocation.
 It verifies the correctness of a result of a single FPC Chaincode execution and produces the FPC chaincode state updates as a read/writeset of a traditional Fabric transaction.
 In particular, the Validation Logic receives the output of a FPC Chaincode invocation, which is encrypted and signed by the enclave.
-The validation logic verifies the signature (or endorsement) over the enclave execution response and that the response was produced by an enclave registered at the Enclave Registry.
+The validation logic verifies the signature (or enclave endorsement) over the enclave execution response and that the response was produced by an enclave registered at the Enclave Registry.
 FPC defines an implicit enclave endorsement policy -- richer policies will be supported in [future releases](#feature-roadmap) -- by requiring a single enclave endorsement for validation.
 Once the verification succeeds, the Enclave Endorsement Validation component applies any state updates issued by the FPC Chaincode using `get_state` and `put_state` operations.
 As the Validation logic is bundled together with the FPC Chaincode in a single Fabric chaincode package,
