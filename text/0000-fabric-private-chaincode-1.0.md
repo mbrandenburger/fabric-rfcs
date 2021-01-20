@@ -215,13 +215,19 @@ An organization can modify any software (including any hypervisor, operating sys
 Yet, such an organization would not be able to extract private state from the chaincode,
 or learn anything about the requests or responses of the victim organization (other than what the chaincode logic allows them to learn about it).
 
-- Organizations do have to trust a quorum of other organizations as defined by the lifecycle and chaincode endorsement policies as far as integrity of chaincode metadata is concerned. E.g., they have to rely on quorums of admins to only create and modify chaincodes as appropriate and they have to rely on quorum of peers to properly execute transactions of the Enclave Registry and the Enclave Endorsement Validation (see more details [below](#architecture)).
+- Organizations do have to trust a quorum of other organizations as defined by the Fabric lifecycle and chaincode endorsement policies as far as integrity of chaincode metadata is concerned. E.g., they have to rely on quorums of admins to only create and modify chaincodes as appropriate; also, they have to rely on quorums of peers to properly execute transactions of the Enclave Registry and the Enclave Endorsement Validation (see more details [below](#architecture)).
 
 - We also assume that normally users trust the peers of their own organization, e.g., when performing lifecycle operations or invoking chaincode execution. (This is primarily for simplicity and is relevant when retrieving public FPC encryption keys from the Enclave Registry. As for any Fabric chaincode, users outside of organizations could implement queries without trust in a single organization/peer by repeating queries with multiple peers/organizations until enough identical responses are received to satisfy the endorsement policy, similar to transaction validation at peers before applying them to the ledger.)
 
-- We do assume that a code running inside a TEE cannot be tampered with or its memory inspected. Similarly, we also require that remote attestation provided by a TEE are authentic and prove that only the code referenced in the attestation could have issued it.
-  Therefore, all participants/organizations trust a TEE (in particular, the FPC Chaincode Enclave), which can provide such an attestation, regardless of at which peer/organization the TEE is hosted.
-  However, given above-mentioned trust assumptions on peers, a TEE (FPC Chaincode Enclave) cannot trust the hosting peer. Hence all data received via transaction invocations (e.g., the transaction proposal) or via state access operations (e.g., `get_state`) must be considered untrusted.
+- We do assume that a code running inside a TEE cannot be tampered with or its memory inspected.
+However, given above-mentioned trust assumptions on peers, a TEE (FPC Chaincode Enclave) cannot trust the (rest of the) hosting peer.
+Hence all data received via transaction invocations (e.g., the transaction proposal) or via state access operations (e.g., `get_state`) must be considered untrusted.
+
+- We additionally require that remote attestations provided by a TEE are authentic and prove that only the code referenced in the attestation could have issued it.
+Therefore, all participants/organizations trust a TEE (in particular, the FPC Chaincode Enclave), which can provide such an attestation, regardless of at which peer/organization the TEE is hosted.
+Such trust extends also to enclave signatures issued from attested cryptographic keys.
+It is due to such trust that FPC *implicitly* defines an enclave endorsement policy,
+according to which a single enclave signature is sufficient to [validate](#enclave-endorsement-validation) an FPC transaction.
 
 
 # FPC 1.0 Application Domain
@@ -336,9 +342,10 @@ This prevents a malicious peer from responding with a wrong transaction encrypti
 
 FPC uses a two-step execution process where first the FPC chaincode executes, and then the Enclave Endorsement Validation executes, with the latter serving as the traditional Fabric transaction.
 The Enclave Endorsement Validation component implements the second step of an FPC chaincode invocation.
-It verifies the correctness of a result of an FPC Chaincode execution and produces the FPC chaincode state updates as a read/writeset of a traditional Fabric transaction.
+It verifies the correctness of a result of a single FPC Chaincode execution and produces the FPC chaincode state updates as a read/writeset of a traditional Fabric transaction.
 In particular, the Validation Logic receives the output of a FPC Chaincode invocation, which is encrypted and signed by the enclave.
-The validation logic verifies the signature over the enclave execution response and that the response was produced by an enclave registered at the Enclave Registry.
+The validation logic verifies the signature (or endorsement) over the enclave execution response and that the response was produced by an enclave registered at the Enclave Registry.
+FPC defines an implicit enclave endorsement policy -- richer policies will be supported in [future releases](#feature-roadmap) -- by requiring a single enclave endorsement for validation.
 Once the verification succeeds, the Enclave Endorsement Validation component applies any state updates issued by the FPC Chaincode using `get_state` and `put_state` operations.
 As the Validation logic is bundled together with the FPC Chaincode in a single Fabric chaincode package,
 these updates are eventually committed within the same namespace during the validation-and-commit phase of a Fabric transaction. 
@@ -535,7 +542,7 @@ It allows for different chaincode implementations as long as changes to the ledg
     Most importantly, the version field of the chaincode definition precisely identifies the chaincode's binary executable.
 
 - Multiple key/value pairs and composite keys as well as secure access to MSP identities via `getCreator` will be supported once below [Rollback-Protection Extension](#rollback-protection-extension) is added.
-- Arbitrary endorsement policies
+- Arbitrary (enclave) endorsement policies
 - State-based endorsement
 - Chaincode-to-chaincode invocations (cc2cc)
 - Private Collections
@@ -598,7 +605,7 @@ This will include the core infrastructure for FPC including the C/C++ Chaincode 
 
 # Feature Roadmap
 
-- Support for multiple enclaves and correspondingly richer endorsement policies, performance improvements and fairness/progress guarantees.
+- Support for multiple enclaves and correspondingly richer (enclave) endorsement policies, performance improvements and fairness/progress guarantees.
 
 - Design and implementation of the [Rollback-Protection Extension](#rollback-protection-extension).
 
