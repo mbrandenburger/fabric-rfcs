@@ -181,7 +181,11 @@ The chaincode deployment follows mostly the standard Fabric procedure:
   peer lifecycle chaincode commit --name ${CC_ID} --version ${MRENCLAVE} ...
   ```
 - Lastly, once the chaincode definition for an FPC Chaincode has been approved by the consortium, 
-  a Chaincode Enclave is created via a new `initEnclave` lifecycle management command. 
+  a Chaincode Enclave must be created via an `initEnclave` FPC-lifecycle command.
+  FPC implements such command as a regular chaincode method invoked through the `peer chaincode` (query) command.
+  Hence, supporting it does not require any modification to the Fabric framework.
+  (See the [Enclave Initialization and Registration](#enclave-initialization-and-registration) section for more details.)
+
   <!-- commented out as not really user visible
     This command triggers the creation of an enclave and registers it at the FPC Registry.  
     The registration includes the attestation of the Chaincode Enclave.
@@ -381,7 +385,10 @@ However, any FPC Chaincode invocation will return an error because the FPC Chain
 
 The administrator of the peer hosting the FPC Chaincode Enclave is responsible for the initialization and registration of the enclave.
 The operation is performed by executing the `initEnclave` admin command (see Step 2 above).
-The command can be triggered through the FPC Client SDK (see [earlier Deployment Section](#deployment)).
+
+FPC implements this command as a regular chaincode method, and uses Fabric's `peer chaincode` command to call it.
+Hence, its implementation does not modify, nor requires any modifications, to the Fabric framework.
+Also, conveniently, the command can be triggered through the FPC Client SDK (see [earlier Deployment Section](#deployment)), which is in turn built on the Fabric Client SDK for Go.
 
 A successful initialization and registration will result in a new entry in the enclave registry namespace on the ledger. In particular, each entry contains enclave credentials, which cryptographically bind the enclave to the chaincode as defined in the chaincode definition.
 
