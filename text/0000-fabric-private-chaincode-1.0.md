@@ -227,7 +227,7 @@ Hence all data received via transaction invocations (e.g., the transaction propo
 Therefore, all participants/organizations trust a TEE (in particular, the FPC Chaincode Enclave), which can provide such an attestation, regardless of at which peer/organization the TEE is hosted.
 Such trust extends also to enclave signatures issued from attested cryptographic keys.
 It is due to such trust that FPC *implicitly* defines an enclave endorsement policy,
-according to which a single enclave signature is sufficient to [validate](#enclave-endorsement-validation) an FPC transaction.
+according to which a single enclave signature (enclave endorsement) is sufficient to [validate](#enclave-endorsement-validation) an FPC transaction successfully.
 
 
 # FPC 1.0 Application Domain
